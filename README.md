@@ -13,8 +13,8 @@ import sp
 (commodity_futures, commodity_options) = sp.get_all_options(symbol)
 ```
 
-where `<symbol>` is a supported CME commodity symbol (e.g. `<'S'>` for soybeans or `<'C'>` for corn).  This returns two related dictionaries of the form `<(futures, options)>`. 
+where `symbol` is a supported CME commodity symbol (e.g. `'S'` for soybeans or `'C'` for corn).  This returns two related dictionaries of the form `(futures, options)`. 
 
-`<futures>` takes the form `<futures[month][expiration, price]>` where `<month>` is a three character month abbreviation and a two character year abbreviation (e.g. `<NOV16>`) and expiration is a `<datetime.date>` object.
+`futures` takes the form `futures[month][expiration, price]` where `month` is a three character month abbreviation and a two character year abbreviation (e.g. `NOV16`) and expiration is a `datetime.date` object.
 
-`<options>` takes the form `<options[month]["CALL"|"PUT"][strike][delta, gamma, open_interest, price, vanna, vega, volatility]>`. This form allows the user to uniquely identify a contract (e.g. a NOV16 960.0 CALL) and ascertain it's market and market-derived values. 
+`options` takes the form `options[month]["CALL"|"PUT"][strike][delta, gamma, open_interest, price, vanna, vega, volatility]`. This form allows the user to uniquely identify a contract (e.g. a NOV16 960.0 CALL) and ascertain it's market and market-derived values. 

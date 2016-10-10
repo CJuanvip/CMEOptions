@@ -370,9 +370,9 @@ def get_all_options(symbol):
     settlements = isolate_commodity(settlements, symbol)
     futures = make_futures_dict(settlements, symbol, expiration_dict)
 
-    options = {symbol: {}}
+    options = {}
     for key in futures.keys():
-        options[symbol][key] = make_options_dict(settlements,
+        options[key] = make_options_dict(settlements,
                                               symbol,
                                               futures,
                                               key)

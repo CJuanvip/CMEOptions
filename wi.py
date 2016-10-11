@@ -182,29 +182,45 @@ def count_options(options_month, futures_price):
     return count
 
 
-def print_OI(options_month):
+def print_market(options_month):
 
     strikes = get_strikes(options_month)
     strikes.sort()
 
+    print("Strike,Open Interest,Price,Delta,Gamma,Vega,Vanna,Volatility")
+
     for contract in ["CALL", "PUT"]:
         for strike in strikes:
             try:
-                print("{0},{1}".format(strike, options_month[contract][strike]["open_interest"]))
+                if greeks: 
+                    print("{0},{1}".format(strike, 
+                                           options_month[contract][strike]["open_interest"],
+                                           options_month[contract][strike]["price"],
+                                           options_month[contract][strike]["Delta"],
+                                           options_month[contract][strike]["Gamma"],
+                                           options_month[contract][strike]["Vega"],
+                                           options_month[contract][strike]["Vanna"],
+                                           options_month[contract][strike]["Volatility"]))
             except ValueError:
                 pass
-        print("\n")
+        print("\n") 
 
 
 def main(symbol, month):
     (futures, options) = sp.get_all_options(symbol)
     
+    for key in options["NOV16"]["CALL"][960.0].keys():
+        print(key)
+
+
+    sys.exit(0)
+
     futures_month = futures[month]
     # futures_month: expiration date and underlying price
-    options_month = options[symbol][month]
+    options_month = options[month]
     # options month[call_or_put][strike][OI/vol/price/delta/gamma]
 
-    print_OI(options_month)
+    print_market(options_month)
     sys.exit(0)
 
     averages = get_average_option(options_month)

@@ -192,15 +192,14 @@ def print_market(options_month):
     for contract in ["CALL", "PUT"]:
         for strike in strikes:
             try:
-                if greeks: 
-                    print("{0},{1}".format(strike, 
-                                           options_month[contract][strike]["open_interest"],
-                                           options_month[contract][strike]["price"],
-                                           options_month[contract][strike]["Delta"],
-                                           options_month[contract][strike]["Gamma"],
-                                           options_month[contract][strike]["Vega"],
-                                           options_month[contract][strike]["Vanna"],
-                                           options_month[contract][strike]["Volatility"]))
+                print("{0},{1}".format(strike, 
+                                       options_month[contract][strike]["open_interest"],
+                                       options_month[contract][strike]["price"],
+                                       options_month[contract][strike]["delta"],
+                                       options_month[contract][strike]["gamma"],
+                                       options_month[contract][strike]["vega"],
+                                       options_month[contract][strike]["vanna"],
+                                       options_month[contract][strike]["volatility"]))
             except ValueError:
                 pass
         print("\n") 
@@ -208,21 +207,14 @@ def print_market(options_month):
 
 def main(symbol, month):
     (futures, options) = sp.get_all_options(symbol)
-    
-    for key in options["NOV16"]["CALL"][960.0].keys():
-        print(key)
-
-
-    sys.exit(0)
 
     futures_month = futures[month]
     # futures_month: expiration date and underlying price
     options_month = options[month]
     # options month[call_or_put][strike][OI/vol/price/delta/gamma]
 
-    print_market(options_month)
-    sys.exit(0)
-
+    #print_market(options_month)
+    
     averages = get_average_option(options_month)
     average_call = averages["CALL"]
     average_put = averages["PUT"]
@@ -236,8 +228,12 @@ def main(symbol, month):
     greek = "delta"
     theo_price = 337.0
     #coefficients = theo_greek_at_price(skewed_months, greek, price_ladder, theo_price)["coefficients"]
-    print(theo_greek_at_price(skewed_months, greek, price_ladder, theo_price))
+    theo = theo_greek_at_price(skewed_months, greek, price_ladder, theo_price)
     #print(theo_price_at_greek(coefficients, -120000))
+
+    coefficients = theo["coefficients"]
+    theo_delta = -100000
+    print(theo_price_at_greek(coefficients, theo_delta))
 
 
 if __name__ == "__main__":

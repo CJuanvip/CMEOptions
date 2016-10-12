@@ -1,7 +1,7 @@
 import sp
 import wi
+import sys
 
-SYMBOLS = ['C', 'W', 'S', 'SM', 'BO']
 MONTH_LETTERS = {'JAN': 'F',
                  'FEB': 'G',
                  'MAR': 'H',
@@ -14,9 +14,9 @@ MONTH_LETTERS = {'JAN': 'F',
                  'OCT': 'V',
                  'NOV': 'X',
                  'DEC': 'Z'}
-                 
 
-def make_header():
+
+def make_oi_header():
     header = "%report.text - the python output for tex rendering.\n"
     header += "\\documentclass{article}\n"
     header += "\\usepackage{times}\n"
@@ -40,7 +40,7 @@ def make_header():
     return header
 
 
-def make_footer():
+def make_oi_footer():
     footer = "\\hline\n"
     footer += "\\end{tabular}\n"
     footer += "\\caption{This table shows \\newline 1) the futures equivalent open interest in options on a delta weighted basis. \newline 2) the simple average open interest for calls, puts, and combined positions.}\n"
@@ -50,14 +50,25 @@ def make_footer():
     return footer
 
 
-def month_line(symbol, month):
+def sort_months(futures):
+
+    months = []
+    for key in futures.keys():
+        months.append(key)
+
+    months.sort(key=lambda month: MONTH_LETTERS[month[:3]])
+    months.sort(key=lambda month: month[-2:])
+
+    return months
+
+
+def month_line(symbol, month, options):
 
     month_abbreviation = MONTH_LETTERS[month[:3]]
     month_abbreviation += month[-1]
     
-    (futures, options) = sp.get_all_options(symbol)
-    average_options = wi.get_average_option(options[month])
-    total_delta = wi.calc_total_greek(options[month], 'delta')
+    average_options = wi.get_average_option(options)
+    total_delta = wi.calc_total_greek(options, 'delta')
     
     line = "{0}{1} & {2:,.0f} &   & {3:.0f} & {4:.0f} & {5:.0f}\\\\\n".format(
         symbol,
@@ -70,11 +81,26 @@ def month_line(symbol, month):
     return line
 
 
+def oi_tex_maker(symbols):
+
+    header = make_oi_header()
+
+    oi_out = ""
+    for symbol in symbols:
+        (futures, options) = sp.get_all_options(symbol)
+        months = sort_months(futures)
+        months = months[:3]
+        for month in months:
+            line = month_line(symbol, month, options[month])
+            oi_out += line
+        oi_out += "\\hline\n"
+        
+    footer = make_oi_footer()
+
+    print("{0}{1}{2}".format(header, oi_out, footer))
+
 def main():
-    header = make_header()
-    S_NOV16 = month_line('S', 'NOV16')
-    footer = make_footer()
-    print("{0}{1}{2}".format(header, S_NOV16, footer))
+    oi_tex_maker(['S', 'C', 'W'])
 
     
 if __name__ == '__main__':

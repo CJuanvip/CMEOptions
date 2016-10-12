@@ -46,3 +46,7 @@ In this case, the user can call `get_average_option` to get a baseline number, s
 ### `print_OI`
 
 `print_OI` simply prints out the entire options market, including open interest, settlement price, delta, gamma, vega, vanna, and volatility for each settled call and put strike. The output is meant to be piped to a csv file for viewing and analysis by a spreadsheet program.
+
+## `tp.py`
+
+`tp.py` is the TeX processing script. It draws on the data scraping of `sp.py` and the data processing of `wi.py` to format the data in a presentable PDF. Currently, `tp.py` implements `oi_tex_maker()`, which presents a snapshot of the options market, with average call, put, and options strikes as well as total open delta position in the market.

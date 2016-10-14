@@ -318,17 +318,16 @@ def d2(v, S, K, T, r=INTEREST_RATE):
     return D2
 
 
-def make_options_dict(settles, symbol, futures_dict, month):
+def make_options_dict(settles, symbol, futures_dict, month, settlement_date):
 
     file_name = os.path.join(settles["directory"], settles["file_name"])
     options_dict = {"CALL": {}, "PUT": {}}
-    today = datetime.date.today()
 
     with open(file_name, "r") as settlements:
         on = False
         call_or_put = ""    # will be "CALL" or "PUT"
         S = futures_dict[month]["price"]
-        T = float((futures_dict[month]["expiration"] - today).days) / 365
+        T = float((futures_dict[month]["expiration"] - settlement_date).days) / 365
         prev_line = ";lakjsdf"
 
         while True:
@@ -388,15 +387,19 @@ def get_all_settlements(symbol):
     options = {}
     for key in futures.keys():
         options[key] = make_options_dict(settlements,
-                                              symbol,
-                                              futures,
-                                              key)
+                                         symbol,
+                                         futures,
+                                         key,
+                                         settlement_date)
 
-    return {"futures": futures, "options": options, "date": settlement_date}
+    return {"futures": futures, "options": options, "settlement_date": settlement_date}
 
 
 def main(symbol, month):
-    (futures, options) = get_all_options(symbol)
+    settlements = get_all_settlements(symbol)
+
+    futures = settlements["futures"]
+    options = settlements["options"]
 
     output = "strike,price,delta,vol,open interest,gamma\n"
     for i in ["CALL", "PUT"]:
@@ -415,8 +418,8 @@ def main(symbol, month):
                                                    options[symbol][month][i][strike]["delta"],
                                                    options[symbol][month][i][strike]["gamma"]
                                                    )
-    today = datetime.date.today()
-    with open("{0}_{1}_as_of_{2}_{3}.csv".format(symbol, month, today.month, today.day), "w") as file:
+    settlement_date = settlements["settlement_date"]
+    with open("{0}_{1}_as_of_{2}_{3}.csv".format(symbol, month, settlement_date.month, settlement_date.day), "w") as file:
             file.write(output)
 
 

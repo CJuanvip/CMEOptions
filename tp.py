@@ -16,7 +16,7 @@ MONTH_LETTERS = {'JAN': 'F',
                  'DEC': 'Z'}
 
 
-def make_oi_header():
+def make_oi_header(settlement_date):
     header = "%report.text - the python output for tex rendering.\n"
     header += "\\documentclass{article}\n"
     header += "\\usepackage{times}\n"
@@ -25,7 +25,9 @@ def make_oi_header():
     header += "\\usepackage{caption}\n"
     header += "\\begin{document}\n"
     header += "\\title{Options Open Interest}\n"
-    header += "\\date{\\today}\n"
+    header += "\\date{For Market Date "
+    header += settlement_date.strftime("%B %d, %Y")
+    header += "}\n"
     header += "\\maketitle\n"
     header += "\\begin{table}[h!]\n"
     header += "\\centering\n"
@@ -43,7 +45,9 @@ def make_oi_header():
 def make_oi_footer():
     footer = "\\hline\n"
     footer += "\\end{tabular}\n"
-    footer += "\\caption{This table shows \\newline 1) the futures equivalent open interest in options on a delta weighted basis. \\newline 2) the simple average open interest for calls, puts, and combined positions.}\n"
+    footer += "\\caption{This table shows "
+    footer += "\\newline 1) the futures equivalent open interest in options on a delta weighted basis. "
+    footer += "\\newline 2) the simple average open interest for calls, puts, and combined positions.}\n"
     footer += "\\end{table}\n"
     footer += "\\end{document}\n"
 
@@ -83,11 +87,12 @@ def oi_month_line(symbol, month, options):
 
 def oi_tex_maker(symbols):
 
-    header = make_oi_header()
+    header = ""
 
     oi_out = ""
     for symbol in symbols:
         settlements = sp.get_all_settlements(symbol)
+        header = make_oi_header(settlements["settlement_date"])
         options = settlements["options"]
         futures = settlements["futures"]
         months = sort_months(futures)
@@ -100,6 +105,7 @@ def oi_tex_maker(symbols):
     footer = make_oi_footer()
 
     print("{0}{1}{2}".format(header, oi_out, footer))
+
 
 def main():
     oi_tex_maker(['S', 'C', 'W'])

@@ -94,10 +94,9 @@ def calc_total_greek(options_month, greek):
     return total_greek
 
 
-def make_skewed_months(options_month, futures_month, price_ladder, step_size):
-    
-    today = datetime.date.today()
-    T = float((futures_month["expiration"] - today).days) / 365
+def make_skewed_months(options_month, futures_month, settlement_date, price_ladder, step_size):
+
+    T = float((futures_month["expiration"] - settlement_date).days) / 365
     strikes = get_strikes(options_month)
 
 
@@ -208,12 +207,10 @@ def print_market(options_month):
 def main(symbol, month):
     settlements = sp.get_all_settlements(symbol)
 
-    futures = settlements["futures"]
-    options = settlements["options"]
-
-    futures_month = futures[month]
+    futures_month = settlements["futures"][month]
     # futures_month: expiration date and underlying price
-    options_month = options[month]
+
+    options_month = settlements["options"][month]
     # options month[call_or_put][strike][OI/vol/price/delta/gamma]
 
     #print_market(options_month)
@@ -226,7 +223,13 @@ def main(symbol, month):
     step_size = PRODUCT_SYMBOLS[symbol]["step"]
     price_ladder = get_price_ladder(futures_month, averages, step_size)
 
-    skewed_months = make_skewed_months(options_month, futures_month, price_ladder, step_size)
+    settlement_date = settlements["settlement_date"]
+
+    skewed_months = make_skewed_months(options_month, 
+                                       futures_month, 
+                                       settlement_date, 
+                                       price_ladder, 
+                                       step_size)
 
     greek = "delta"
     theo_price = 337.0

@@ -50,3 +50,7 @@ In this case, the user can call `get_average_option` to get a baseline number, s
 ## `tp.py`
 
 `tp.py` is the TeX processing script. It draws on the data scraping of `sp.py` and the data processing of `wi.py` to format the data in a presentable PDF. Currently, `tp.py` implements `oi_tex_maker()`, which presents a snapshot of the options market, with average call, put, and options strikes as well as total open delta position in the market.
+
+## `odb.py`
+
+`odb.py` is a script to implement and maintain a database to track historical records of the option market. For example, I've posited that the average put strike is a point of resistance in the market. By tracking the underlying price and the average put strike over time, we can confirm or disprove this for the supported commodities.

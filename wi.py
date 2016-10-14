@@ -206,7 +206,10 @@ def print_market(options_month):
 
 
 def main(symbol, month):
-    (futures, options) = sp.get_all_options(symbol)
+    settlements = sp.get_all_settlements(symbol)
+
+    futures = settlements["futures"]
+    options = settlements["options"]
 
     futures_month = futures[month]
     # futures_month: expiration date and underlying price

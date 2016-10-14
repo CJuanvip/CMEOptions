@@ -77,7 +77,7 @@ def get_settlements():
 
 def get_settlement_date(settlements):
 
-    all_settles = os.path.join(settles["directory"], settles["file_name"])
+    all_settles = os.path.join(settlements["directory"], settlements["file_name"])
 
     with open(all_settles, "r") as settles:
 
@@ -194,6 +194,10 @@ def make_futures_dict(settles, symbol, expiration_dict):
 
                 ticks = l[5]
                 try:
+                    open_interest = int(l[-1])
+                except ValueError:
+                    open_interest = 0
+                try:
                     settlement = ticks_to_decimal(ticks, symbol)
                 except ValueError:
                     print(theline)
@@ -201,7 +205,8 @@ def make_futures_dict(settles, symbol, expiration_dict):
                 try:
                     expiration = expiration_dict[contract]
                     futures_dict[contract] = {"price": settlement,
-                                              "expiration": expiration}
+                                              "expiration": expiration,
+                                              "open_interest": open_interest}
                 except KeyError:
                     pass
 
@@ -371,7 +376,7 @@ def make_options_dict(settles, symbol, futures_dict, month):
     return options_dict
 
 
-def get_all_options(symbol):
+def get_all_settlements(symbol):
     
     settlements = get_settlements()
 
@@ -387,7 +392,7 @@ def get_all_options(symbol):
                                               futures,
                                               key)
 
-    return (futures, options)
+    return {"futures": futures, "options": options, "date": settlement_date}
 
 
 def main(symbol, month):

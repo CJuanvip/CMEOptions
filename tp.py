@@ -43,7 +43,7 @@ def make_oi_header():
 def make_oi_footer():
     footer = "\\hline\n"
     footer += "\\end{tabular}\n"
-    footer += "\\caption{This table shows \\newline 1) the futures equivalent open interest in options on a delta weighted basis. \newline 2) the simple average open interest for calls, puts, and combined positions.}\n"
+    footer += "\\caption{This table shows \\newline 1) the futures equivalent open interest in options on a delta weighted basis. \\newline 2) the simple average open interest for calls, puts, and combined positions.}\n"
     footer += "\\end{table}\n"
     footer += "\\end{document}\n"
 
@@ -62,7 +62,7 @@ def sort_months(futures):
     return months
 
 
-def month_line(symbol, month, options):
+def oi_month_line(symbol, month, options):
 
     month_abbreviation = MONTH_LETTERS[month[:3]]
     month_abbreviation += month[-1]
@@ -87,12 +87,14 @@ def oi_tex_maker(symbols):
 
     oi_out = ""
     for symbol in symbols:
-        (futures, options) = sp.get_all_options(symbol)
+        settlements = sp.get_all_settlements(symbol)
+        options = settlements["options"]
+        futures = settlements["futures"]
         months = sort_months(futures)
         months = months[:3]
         for month in months:
-            line = month_line(symbol, month, options[month])
-            oi_out += line
+            month_line = oi_month_line(symbol, month, options[month])
+            oi_out += month_line
         oi_out += "\\hline\n"
         
     footer = make_oi_footer()

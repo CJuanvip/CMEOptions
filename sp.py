@@ -44,7 +44,6 @@ PRODUCT_SYMBOLS = {"S": {"name": "soybeans",
                            "has short-dated": False}
                    }
 INTEREST_RATE = 0.01
-TESTING = False
 
 
 def get_settlements():
@@ -74,6 +73,24 @@ def get_settlements():
         url = "ftp://ftp.cmegroup.com/pub/settle/stlags"
         urllib.request.urlretrieve(url, file_path)
     return {"file_name": file_name, "directory": dest_dir}
+
+
+def get_settlement_date(settlements):
+
+    all_settles = os.path.join(settles["directory"], settles["file_name"])
+
+    with open(all_settles, "r") as settles:
+
+        theline = settles.readline().split('/')
+        month = theline[0][-2:]
+        month = int(month.strip())
+        day = int(theline[1])
+        year = theline[2][:2]
+        year = int(year.strip()) + 2000
+
+        settlement_date = datetime.date(day=day, month=month, year=year)
+
+    return settlement_date
 
 
 def make_expiration_dict():
@@ -356,16 +373,9 @@ def make_options_dict(settles, symbol, futures_dict, month):
 
 def get_all_options(symbol):
     
-    if TESTING:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        dest_dir = os.path.join(script_dir, "Settlements")
-        if not os.path.exists(dest_dir):
-            os.mkdir(dest_dir)
-        file_name = "27_9_2016_settlements.txt"
-        settlements = {"file_name": file_name, "directory": dest_dir}
-    else:
-        settlements = get_settlements()
+    settlements = get_settlements()
 
+    settlement_date = get_settlement_date(settlements)
     expiration_dict = make_expiration_dict()
     settlements = isolate_commodity(settlements, symbol)
     futures = make_futures_dict(settlements, symbol, expiration_dict)

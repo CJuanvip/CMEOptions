@@ -83,7 +83,10 @@ def main():
     with conn:
 
         cursor = conn.cursor()
-        create_table(cursor)
+        try:
+          create_table(cursor)
+        except sqlite3.OperationalError:
+          pass
         add_data(cursor, "History", data)
 
 if __name__ == '__main__':

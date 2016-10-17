@@ -204,16 +204,38 @@ def print_market(options_month):
         print("\n") 
 
 
+def print_itm_ladder(options_month, price_ladder):
+
+    print("price,itm_calls,itm_puts,itm_total")
+
+    strikes = get_strikes(options_month)
+    for price in price_ladder:
+        itm_calls = 0
+        itm_puts = 0
+        for strike in strikes:
+            if strike < price:
+                itm_calls += options_month["CALL"][strike]["open_interest"]
+            if strike < price:
+                itm_puts += options_month["PUT"][strike]["open_interest"]
+        print("{0},{1},{2},{3}".format(price, itm_calls, itm_puts, itm_calls+itm_puts))
+
+    all_calls = 0
+    all_puts = 0
+    for strike in strikes:
+        all_calls += options_month["CALL"][strike]["open_interest"]
+        all_puts += options_month["PUT"][strike]["open_interest"]
+
+    print("Totals,{0},{1},{2}".format(all_calls, all_puts, all_calls+all_puts))
+
+
 def main(symbol, month):
     settlements = sp.get_all_settlements(symbol)
 
     futures_month = settlements["futures"][month]
-    # futures_month: expiration date and underlying price
+    # futures_month: expiration date, underlying price, and open interest
 
     options_month = settlements["options"][month]
     # options month[call_or_put][strike][OI/vol/price/delta/gamma]
-
-    #print_market(options_month)
     
     averages = get_average_option(options_month)
     average_call = averages["CALL"]
@@ -232,10 +254,9 @@ def main(symbol, month):
                                        step_size)
 
     greek = "delta"
-    theo_price = 337.0
+    theo_price = 975.5
     #coefficients = theo_greek_at_price(skewed_months, greek, price_ladder, theo_price)["coefficients"]
     theo = theo_greek_at_price(skewed_months, greek, price_ladder, theo_price)
-    #print(theo_price_at_greek(coefficients, -120000))
 
     coefficients = theo["coefficients"]
     theo_delta = -100000

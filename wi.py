@@ -57,7 +57,12 @@ def get_strikes(options_month):
     return strikes
 
 
-def get_price_ladder(futures_month, averages, step_size):
+def get_price_ladder(settlements, symbol, month):
+
+    futures_month = settlements["futures"][month]
+    options_month = settlements["options"][month]
+    averages = get_average_option(options_month)
+    step_size = PRODUCT_SYMBOLS[symbol]["step"]
 
     floor = futures_month["price"]
     while averages["PUT"] < floor:
@@ -78,7 +83,8 @@ def get_price_ladder(futures_month, averages, step_size):
 def calc_total_greek(options_month, greek):
     strikes = get_strikes(options_month)
 
-    total_greek = 0
+    total_greek = {"CALL": 0,
+                   "PUT": 0}
     for contract in ["CALL", "PUT"]:
         for strike in strikes:
             try:
@@ -89,16 +95,21 @@ def calc_total_greek(options_month, greek):
                 strike_greek = 0
             if math.isnan(strike_greek):
                 continue
-            total_greek += strike_OI * strike_greek
+            total_greek[contract] += strike_OI * strike_greek
 
     return total_greek
 
 
-def make_skewed_months(options_month, futures_month, settlement_date, price_ladder, step_size):
+def make_skewed_months(settlements, symbol, month):
+
+    options_month = settlements["options"][month]
+    futures_month = settlements["futures"][month]
+    price_ladder = get_price_ladder(settlements, symbol, month)
+    settlement_date = settlements["settlement_date"]
+    step_size = PRODUCT_SYMBOLS[symbol]["step"]
 
     T = float((futures_month["expiration"] - settlement_date).days) / 365
     strikes = get_strikes(options_month)
-
 
     skewed_months = {}
     for entry in enumerate(price_ladder):
@@ -191,41 +202,37 @@ def print_market(options_month):
     for contract in ["CALL", "PUT"]:
         for strike in strikes:
             try:
-                print("{0},{1}".format(strike, 
-                                       options_month[contract][strike]["open_interest"],
-                                       options_month[contract][strike]["price"],
-                                       options_month[contract][strike]["delta"],
-                                       options_month[contract][strike]["gamma"],
-                                       options_month[contract][strike]["vega"],
-                                       options_month[contract][strike]["vanna"],
-                                       options_month[contract][strike]["volatility"]))
+                print("{0},{1},{2},{3},{4},{5},{6},{7}".format(strike, 
+                                    options_month[contract][strike]["open_interest"],
+                                    options_month[contract][strike]["price"],
+                                    options_month[contract][strike]["delta"],
+                                    options_month[contract][strike]["gamma"],
+                                    options_month[contract][strike]["vega"],
+                                    options_month[contract][strike]["vanna"],
+                                    options_month[contract][strike]["volatility"]))
             except ValueError:
                 pass
         print("\n") 
 
 
-def print_itm_ladder(options_month, price_ladder):
+def get_itm_ladder(settlements, symbol, month):
 
-    print("price,itm_calls,itm_puts,itm_total")
+    price_ladder = get_price_ladder(settlements, symbol, month)
+    options_month = settlements["options"][month]
 
     strikes = get_strikes(options_month)
+    itm_options = {}
+        
     for price in price_ladder:
-        itm_calls = 0
-        itm_puts = 0
+        itm_options[price] = {"CALL": 0,
+                              "PUT": 0}
         for strike in strikes:
             if strike < price:
-                itm_calls += options_month["CALL"][strike]["open_interest"]
-            if strike < price:
-                itm_puts += options_month["PUT"][strike]["open_interest"]
-        print("{0},{1},{2},{3}".format(price, itm_calls, itm_puts, itm_calls+itm_puts))
+                itm_options[price]["CALL"]  += options_month["CALL"][strike]["open_interest"]
+            if strike > price:
+                itm_options[price]["PUT"] += options_month["PUT"][strike]["open_interest"]
 
-    all_calls = 0
-    all_puts = 0
-    for strike in strikes:
-        all_calls += options_month["CALL"][strike]["open_interest"]
-        all_puts += options_month["PUT"][strike]["open_interest"]
-
-    print("Totals,{0},{1},{2}".format(all_calls, all_puts, all_calls+all_puts))
+    return itm_options
 
 
 def main(symbol, month):
@@ -237,21 +244,16 @@ def main(symbol, month):
     options_month = settlements["options"][month]
     # options month[call_or_put][strike][OI/vol/price/delta/gamma]
     
-    averages = get_average_option(options_month)
-    average_call = averages["CALL"]
-    average_put = averages["PUT"]
-    average_option = averages["TOTAL"]
-
     step_size = PRODUCT_SYMBOLS[symbol]["step"]
-    price_ladder = get_price_ladder(futures_month, averages, step_size)
-
+    averages = get_average_option(settlements["options"][month])
+    price_ladder = get_price_ladder(settlements, symbol, month)
     settlement_date = settlements["settlement_date"]
 
-    skewed_months = make_skewed_months(options_month, 
-                                       futures_month, 
-                                       settlement_date, 
-                                       price_ladder, 
-                                       step_size)
+    skewed_months = make_skewed_months(settlements, symbol, month)
+
+    for price in skewed_months.keys():
+        print(price)
+    sys.exit(0)
 
     greek = "delta"
     theo_price = 975.5

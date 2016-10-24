@@ -10,5 +10,5 @@
 *.log
 *~
 *.db
-*.svg
-*.R
+*.png
+temp.*

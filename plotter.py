@@ -5,7 +5,7 @@ import sys
 import os
 
 
-def svg_setup(dict_arg, symbol, month, chart_var):
+def png_setup(dict_arg, symbol, month, chart_var):
 
     r_price = "price <- c("
     r_calls = "calls <- c("
@@ -21,8 +21,8 @@ def svg_setup(dict_arg, symbol, month, chart_var):
         r_calls += "{0},".format(dict_arg[key]["CALL"])
         r_puts += "{0},".format(dict_arg[key]["PUT"])
 
-    img_name = "{0}_{1}_{2}.svg".format(symbol, month, chart_var)
-    r_script = 'svg("{0}_{1}_{2}.svg")\n'.format(symbol, month, chart_var)
+    img_name = "{0}_{1}_{2}.png".format(symbol, month, chart_var)
+    r_script = 'png("{0}_{1}_{2}.png")\n'.format(symbol, month, chart_var)
     for string in [r_price, r_calls, r_puts]:
         r_script += string[:-1]
         r_script += ")\n"
@@ -30,7 +30,7 @@ def svg_setup(dict_arg, symbol, month, chart_var):
     return (r_script, img_name)
 
 
-def write_svg(r_script, img_name):
+def write_png(r_script, img_name):
     with open("temp.R", "w") as f:
         f.write(r_script)
 
@@ -44,13 +44,13 @@ def write_svg(r_script, img_name):
     subprocess.call("mv {0} ./img".format(img_name), shell=False)
 
 
-def option_greek_svg(skewed_months, symbol, month, greek):
+def option_greek_png(skewed_months, symbol, month, greek):
 
     total_greeks_dict = {}
     for key in skewed_months:
         total_greeks_dict[key] = wi.calc_total_greek(skewed_months[key], greek)
         
-    (r_script, img_name) = svg_setup(total_greeks_dict, symbol, month, greek)
+    (r_script, img_name) = png_setup(total_greeks_dict, symbol, month, greek)
     r_script += """y_min <- min(c(calls,puts))\n
                    y_max <- max(c(calls,puts,calls+puts))\n
                    plot(c(min(price),max(price)), c(y_min,y_max),
@@ -66,15 +66,15 @@ def option_greek_svg(skewed_months, symbol, month, greek):
                    dev.off()""".format(greek, month,
                                        sp.PRODUCT_SYMBOLS[symbol]["name"])
 
-    write_svg(r_script, img_name)
+    write_png(r_script, img_name)
 
     return img_name
 
-def stacked_options_svg(settlements, symbol, month):
+def stacked_options_png(settlements, symbol, month):
 
     itm_options = wi.get_itm_ladder(settlements, symbol, month)
 
-    (r_script, img_name) = svg_setup(itm_options, symbol, month, "stack")
+    (r_script, img_name) = png_setup(itm_options, symbol, month, "stack")
     r_script += """m <- matrix(c(price,calls,puts),nrow=3,byrow=T)\n
                    barplot(m[2:3,],
                            col=c("darkblue","red"),
@@ -89,17 +89,17 @@ def stacked_options_svg(settlements, symbol, month):
                    dev.off()""".format(month,
                                        sp.PRODUCT_SYMBOLS[symbol]["name"])
 
-    write_svg(r_script, img_name)
+    write_png(r_script, img_name)
 
     return img_name
     
 
 def make_all(settlements, symbol, month):
     imgs = []
-    imgs.append(stacked_options_svg(settlements, symbol, month))
+    imgs.append(stacked_options_png(settlements, symbol, month))
     skewed_months = wi.make_skewed_months(settlements, symbol, month)
-    imgs.append(option_greek_svg(skewed_months, symbol, month, "delta"))
-    imgs.append(option_greek_svg(skewed_months, symbol, month, "gamma"))
+    imgs.append(option_greek_png(skewed_months, symbol, month, "delta"))
+    imgs.append(option_greek_png(skewed_months, symbol, month, "gamma"))
 
     return imgs
     

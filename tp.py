@@ -159,5 +159,5 @@ def main(symbols):
 
     
 if __name__ == '__main__':
-    symbols = sys.arg[1:]
-    main()
+    symbols = sys.argv[1:]
+    main(symbols)

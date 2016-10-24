@@ -39,9 +39,18 @@ def get_average_option(options_month):
     (call_OI, call_OIxK) = average_option_helper(options_month, "CALL")
     (put_OI, put_OIxK) = average_option_helper(options_month, "PUT")
 
-    average = {"CALL": call_OIxK / call_OI,
-               "PUT": put_OIxK / put_OI,
-               "TOTAL": (call_OIxK + put_OIxK) / (call_OI + put_OI)}
+    try:
+        average = {"CALL": call_OIxK / call_OI}
+    except ZeroDivisionError:
+        average = {"CALL": 0}
+    try:
+        average["PUT"] = put_OIxK / put_OI
+    except ZeroDivisionError:
+        average["PUT"] = 0
+    try:
+        average["TOTAL"] = (call_OIxK + put_OIxK) / (call_OI + put_OI)
+    except ZeroDivisionError:
+        average["TOTAL"] = 0
 
     return average
 

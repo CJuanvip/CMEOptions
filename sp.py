@@ -216,7 +216,7 @@ def make_futures_dict(settles, symbol, expiration_dict):
     return futures_dict
 
 
-def calc_call_greeks(S, K, T, D1):
+def calc_call_delta(S, K, T, D1):
     delta = 0
     if T <= 0:
         if K < S:
@@ -224,11 +224,11 @@ def calc_call_greeks(S, K, T, D1):
         else:
             return 0
     greeks = {}
-    greeks["delta"] = stats.norm.cdf(D1)
-    return greeks
+    delta = stats.norm.cdf(D1)
+    return delta
 
 
-def calc_put_greeks(S, K, T, D1):
+def calc_put_delta(S, K, T, D1):
     delta = 0
     greeks = {}
 
@@ -238,8 +238,8 @@ def calc_put_greeks(S, K, T, D1):
         else:
             return 0
 
-    greeks["delta"] = -1 * stats.norm.cdf(-D1)
-    return greeks
+    delta = -1 * stats.norm.cdf(-D1)
+    return delta
 
 
 def calc_gamma(v, S, T, D1):
@@ -264,10 +264,11 @@ def make_strike_dict(S, K, T, sett, call_or_put, r=INTEREST_RATE,):
         vol = 0.1
     D1 = d1(vol, S, K, T)
     D2 = d2(vol, S, K, T)
+    greeks = {}
     if call_or_put == "CALL":
-        greeks = calc_call_greeks(S, K, T, D1)
+        greeks["delta"] = calc_call_delta(S, K, T, D1)
     if call_or_put == "PUT":
-        greeks = calc_put_greeks(S, K, T, D1)
+        greeks["delta"] = calc_put_delta(S, K, T, D1)
     greeks["gamma"] = calc_gamma(vol, S, T, D1)
     greeks["vega"] = calc_vega(S, D1, T)
     greeks["vanna"] = calc_vanna(vol, D1, D2)
@@ -398,6 +399,7 @@ def get_all_settlements(symbol):
 def main(symbol, month):
     settlements = get_all_settlements(symbol)
 
+    sys.exit(0)
     futures = settlements["futures"]
     options = settlements["options"]
 

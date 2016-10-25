@@ -140,12 +140,13 @@ def tex_to_pdf(tex):
     if not os.path.exists(dest_dir):
         os.mkdir(dest_dir)
     
-    with open("temp.tex", "w") as f:
+    with open("{0}".format(os.path.join(script_dir, "temp.tex")),
+              "w") as f:
         f.write(tex)
 
-    subprocess.call("latex --output-format=pdf temp.tex",
-                    shell=False)
-    subprocess.call("mv temp.pdf reports", shell=False)
+    subprocess.call("latex --output-format=pdf {0}".format(os.path.join(script_dir, "temp.tex")),
+                    shell=True)
+    subprocess.call("mv temp.pdf reports", shell=True)
 
     for root, dirs, files in os.walk(script_dir):
         for currentFile in files:

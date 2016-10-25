@@ -31,17 +31,19 @@ def png_setup(dict_arg, symbol, month, chart_var):
 
 
 def write_png(r_script, img_name):
-    with open("temp.R", "w") as f:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    with open("{0}".format(os.path.join(script_dir, "temp.R")), "w") as f:
         f.write(r_script)
 
-    subprocess.call("R -f temp.R", shell=False)
-    
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    subprocess.call("R -f {0}".format(os.path.join(script_dir, "temp.R")),
+                                      shell=True)
+                    
     dest_dir = os.path.join(script_dir, "img")
     if not os.path.exists(dest_dir):
         os.mkdir(dest_dir)
                                  
-    subprocess.call("mv {0} ./img".format(img_name), shell=False)
+    subprocess.call("mv {0} ./img".format(img_name), shell=True)
 
 
 def option_greek_png(skewed_months, symbol, month, greek):

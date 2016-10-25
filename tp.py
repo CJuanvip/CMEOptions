@@ -173,7 +173,7 @@ def tex_to_pdf(tex, symbols, settlement_date):
 
     for root, dirs, files in os.walk(script_dir):
         for currentFile in files:
-            exts = (".aux", ".log")
+            exts = (".tex", ".aux", ".log")
             if any(currentFile.lower().endswith(ext) for ext in exts):
                 os.remove(os.path.join(root, currentFile))
 

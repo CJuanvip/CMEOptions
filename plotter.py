@@ -17,12 +17,13 @@ def png_setup(dict_arg, symbol, month, chart_var):
     sorted_keys.sort()
 
     for key in sorted_keys:
-        r_price += "{0},".format(key)
+        r_price += "{0},".format(int(key))
         r_calls += "{0},".format(dict_arg[key]["CALL"])
         r_puts += "{0},".format(dict_arg[key]["PUT"])
 
     img_name = "{0}_{1}_{2}.png".format(symbol, month, chart_var)
     r_script = 'png("{0}_{1}_{2}.png")\n'.format(symbol, month, chart_var)
+    r_script += "options(scipen=999)\n"
     for string in [r_price, r_calls, r_puts]:
         r_script += string[:-1]
         r_script += ")\n"
@@ -48,11 +49,23 @@ def write_png(r_script, img_name):
 
 def option_greek_png(skewed_months, symbol, month, greek):
 
-    total_greeks_dict = {}
+    total_greek_dict = {}
     for key in skewed_months:
-        total_greeks_dict[key] = wi.calc_total_greek(skewed_months[key], greek)
+        total_greek = wi.calc_total_greek(skewed_months[key], greek)
+        total_greek_dict[key] = total_greek
+
+
+    # sorted_keys = []
+    # for key in skewed_months.keys():
+    #     sorted_keys.append(key)
+    # sorted_keys.sort()
+
+    # for key in sorted_keys:
+    #     print("k: {0}\tv: {1}".format(key, total_greek_dict[key]["CALL"] + total_greek_dict[key]["PUT"]))
+
+    # sys.exit(0)
         
-    (r_script, img_name) = png_setup(total_greeks_dict, symbol, month, greek)
+    (r_script, img_name) = png_setup(total_greek_dict, symbol, month, greek)
     r_script += """y_min <- min(c(calls,puts))\n
                    y_max <- max(c(calls,puts,calls+puts))\n
                    plot(c(min(price),max(price)), c(y_min,y_max),
@@ -83,7 +96,8 @@ def stacked_options_png(settlements, symbol, month):
                            xlab="Price",
                            ylab="Contracts",
                            names=m[1,],
-                           cex.axis=0.8,
+                           cex.axis=0.75,
+                           cex.names=0.75,
                            las=2,
                            main="{0} {1} in the Money Options")\n
                    legend("top",legend=c("ITM Calls","ITM Puts"),
@@ -108,7 +122,10 @@ def make_all(settlements, symbol, month):
     
 def main(symbol, month):
     settlements = sp.get_all_settlements(symbol)
-    make_all(settlements, symbol, month)
+    skewed_months = wi.make_skewed_months(settlements, symbol, month)
+    # make_all(settlements, symbol, month)
+    # stacked_options_png(settlements, symbol, month)
+    option_greek_png(skewed_months, symbol, month, "delta")
 
 
 if __name__ == "__main__":

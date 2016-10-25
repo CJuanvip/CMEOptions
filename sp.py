@@ -393,6 +393,14 @@ def get_all_settlements(symbol):
                                          key,
                                          settlement_date)
 
+    empty_keys = []
+    for key in options.keys():
+        if options[key] == {"PUT": {}, "CALL": {}}:
+            empty_keys.append(key)        
+
+    for key in empty_keys:
+        options.pop(key, None)
+
     return {"futures": futures, "options": options, "settlement_date": settlement_date}
 
 

@@ -19,7 +19,7 @@ MONTH_LETTERS = {'JAN': 'F',
                  'DEC': 'Z'}
 
 
-def make_oi_header(settlement_date):
+def make_document_header(settlement_date):
     header = "%report.text - the python output for tex rendering.\n"
     header += "\\documentclass{article}\n"
     header += "\\usepackage{times}\n"
@@ -34,12 +34,20 @@ def make_oi_header(settlement_date):
     header += "\\date{For Market Date "
     header += settlement_date.strftime("%B %d, %Y")
     header += "}\n"
-    header += "\\maketitle\n"
+
+    return header
+    
+
+def make_oi_header(symbol):
+    header = "\\maketitle\n"
     header += "\\begin{table}[h!]\n"
+    header += "\\caption{"
+    header += sp.PRODUCT_SYMBOLS[symbol]["name"]
+    header += " Options}\n"
     header += "\\centering\n"
     header += "\\begin{tabular}{| r | r | r | r | r | r | r | r |}\n"
     header += "\\hline\n"
-    header += "Contract & Num. Calls & Call Delta & Avg Call & Num. Puts & Put Delta & Avg Put & Avg Option\n"
+    header += "Contract & Num. Calls & Num. Puts & Call Delta & Put Delta & Avg Call & Avg Put & Avg Option\n"
     header += "\\\\\n"
     header += "\\hline\n"
     header += "& & & & & & & \\\\\n"
@@ -51,13 +59,22 @@ def make_oi_header(settlement_date):
 def make_oi_footer():
     footer = "\\hline\n"
     footer += "\\end{tabular}\n"
-    footer += "\\caption{This table shows "
-    footer += "\\newline 1) the futures equivalent open interest in options on a delta weighted basis. "
-    footer += "\\newline 2) the simple average open interest for calls, puts, and combined positions.}\n"
     footer += "\\end{table}\n"
 
     return footer
 
+    
+def make_oi_caption():
+    footer = "\\hline\n"
+    footer += "\\end{tabular}\n"
+    footer += "\\caption*{This table shows "
+    footer += "\\newline 1) the number of open options contracts in the market. "
+    footer += "\\newline 2) the futures equivalent open interest in options on a delta weighted basis. "
+    footer += "\\newline 3) the simple average open interest for calls, puts, and combined positions.}\n"
+    footer += "\\end{table}\n"
+
+    return footer
+    
 
 def sort_months(options):
 
@@ -96,13 +113,11 @@ def oi_month_line(symbol, month, options):
 
 def oi_tex_maker(symbols, oi=True, graphics=True):
 
-    header = ""
-
     oi_out = ""
     graphics = ""
     for symbol in symbols:
         settlements = sp.get_all_settlements(symbol)
-        header = make_oi_header(settlements["settlement_date"])
+        oi_out += make_oi_header(symbol)
         options = settlements["options"]
         futures = settlements["futures"]
         months = sort_months(options)
@@ -110,7 +125,10 @@ def oi_tex_maker(symbols, oi=True, graphics=True):
             month_line = oi_month_line(symbol, month, options[month])
             oi_out += month_line
         oi_out += "\\hline\n"
-        oi_out += make_oi_footer()
+        if symbol == symbols[-1]:
+            oi_out += make_oi_caption()
+        else:
+            oi_out += make_oi_footer()
 
         for month in months[:3]:
             imgs = plotter.make_all(settlements, symbol, month)
@@ -119,7 +137,8 @@ def oi_tex_maker(symbols, oi=True, graphics=True):
                 graphics += img[:-4]
                 graphics += "}\n"
                 graphics += "\\newpage\n"
-            
+
+    header = make_document_header(settlements["settlement_date"])
         
     footer = make_oi_footer()
 
@@ -130,27 +149,31 @@ def oi_tex_maker(symbols, oi=True, graphics=True):
         tex += graphics
     tex += "\\end{document}"
         
-    tex_to_pdf(tex)
+    tex_to_pdf(tex, symbols, settlements["settlement_date"])
 
 
-def tex_to_pdf(tex):
+def tex_to_pdf(tex, symbols, settlement_date):
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     dest_dir = os.path.join(script_dir, "reports")
     if not os.path.exists(dest_dir):
         os.mkdir(dest_dir)
+
+    file_name = settlement_date.strftime("%m_%d_%Y")
+    for symbol in symbols:
+        file_name += "_{0}".format(symbol)
     
-    with open("{0}".format(os.path.join(script_dir, "temp.tex")),
+    with open("{0}".format(os.path.join(script_dir, "{0}.tex".format(file_name))),
               "w") as f:
         f.write(tex)
 
-    subprocess.call("latex --output-format=pdf {0}".format(os.path.join(script_dir, "temp.tex")),
+    subprocess.call("latex --output-format=pdf {0}".format(os.path.join(script_dir, "{0}.tex".format(file_name))),
                     shell=True)
-    subprocess.call("mv temp.pdf reports", shell=True)
+    subprocess.call("mv {0}.pdf reports".format(file_name), shell=True)
 
     for root, dirs, files in os.walk(script_dir):
         for currentFile in files:
-            exts = (".tex", ".aux", ".log")
+            exts = (".aux", ".log")
             if any(currentFile.lower().endswith(ext) for ext in exts):
                 os.remove(os.path.join(root, currentFile))
 

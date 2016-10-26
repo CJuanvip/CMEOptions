@@ -149,11 +149,15 @@ def make_skewed_months(settlements, symbol, month):
     return skewed_months
 
 
-def theo_greek_at_price(skewed_months, greek, price_ladder, theo_price):
+def theo_greek_at_price(settlements, symbol, month, greek, theo_price):
+
+    skewed_months = make_skewed_months(settlements, symbol, month)
+    price_ladder = get_price_ladder(settlements, symbol, month)
 
     greeks = []
     for price in price_ladder:
-        greeks.append(calc_total_greek(skewed_months[price], greek))
+        totals = calc_total_greek(skewed_months[price], greek)
+        greeks.append(totals["CALL"] + totals["PUT"])
 
     (a, b, c) = polyfit(price_ladder, greeks, 2)
 
@@ -255,22 +259,15 @@ def main(symbol, month):
     
     step_size = PRODUCT_SYMBOLS[symbol]["step"]
     averages = get_average_option(settlements["options"][month])
-    price_ladder = get_price_ladder(settlements, symbol, month)
     settlement_date = settlements["settlement_date"]
 
-    skewed_months = make_skewed_months(settlements, symbol, month)
-
-    for price in skewed_months.keys():
-        print(price)
-    sys.exit(0)
-
     greek = "delta"
-    theo_price = 975.5
+    theo_price = 350
     #coefficients = theo_greek_at_price(skewed_months, greek, price_ladder, theo_price)["coefficients"]
-    theo = theo_greek_at_price(skewed_months, greek, price_ladder, theo_price)
+    theo = theo_greek_at_price(settlements, symbol, month, greek, theo_price)
 
     coefficients = theo["coefficients"]
-    theo_delta = -100000
+    theo_delta = 0
     print(theo_price_at_greek(coefficients, theo_delta))
 
 

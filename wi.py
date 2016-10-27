@@ -6,13 +6,6 @@ from sp import black_scholes, put_call_parity
 from sp import make_strike_dict
 import sys
 
-PRODUCT_SYMBOLS = {"S": {"step": 10.0},
-                   "C": {"step": 5.0},
-                   "W": {"step": 5.0},
-                   "KC": {"step": 5.0},
-                   "SM": {"step": 5.0},
-                   "BO": {"step": 0.5}}
-
 
 def average_option_helper(options_month, call_or_put):
     
@@ -62,7 +55,7 @@ def get_strikes(options_month):
     for key in options_month["PUT"].keys():
         if not key in strikes:
             strikes.append(key)
-
+    strikes.sort()
     return strikes
 
 
@@ -71,7 +64,16 @@ def get_price_ladder(settlements, symbol, month):
     futures_month = settlements["futures"][month]
     options_month = settlements["options"][month]
     averages = get_average_option(options_month)
-    step_size = PRODUCT_SYMBOLS[symbol]["step"]
+
+    strikes = get_strikes(options_month)
+    steps = []
+    for (index, strike) in enumerate(strikes):
+        try:
+            steps.append(strikes[index + 1] - strike)
+        except IndexError:
+            pass
+
+    step_size = min(steps)
 
     floor = futures_month["price"]
     while averages["PUT"] < floor:
@@ -256,7 +258,8 @@ def main(symbol, month):
 
     options_month = settlements["options"][month]
     # options month[call_or_put][strike][OI/vol/price/delta/gamma]
-    
+    get_price_ladder(settlements, symbol, month)
+
     step_size = PRODUCT_SYMBOLS[symbol]["step"]
     averages = get_average_option(settlements["options"][month])
     settlement_date = settlements["settlement_date"]

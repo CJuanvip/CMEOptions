@@ -59,11 +59,9 @@ def get_strikes(options_month):
     return strikes
 
 
-def get_price_ladder(settlements, symbol, month):
+def get_step_size(settlements, month):
 
-    futures_month = settlements["futures"][month]
     options_month = settlements["options"][month]
-    averages = get_average_option(options_month)
 
     strikes = get_strikes(options_month)
     steps = []
@@ -74,6 +72,16 @@ def get_price_ladder(settlements, symbol, month):
             pass
 
     step_size = min(steps)
+    return step_size
+
+
+def get_price_ladder(settlements, symbol, month):
+
+    futures_month = settlements["futures"][month]
+    options_month = settlements["options"][month]
+    averages = get_average_option(options_month)
+
+    step_size = get_step_size(settlements, month)
 
     floor = futures_month["price"]
     while averages["PUT"] < floor:
@@ -117,7 +125,7 @@ def make_skewed_months(settlements, symbol, month):
     futures_month = settlements["futures"][month]
     price_ladder = get_price_ladder(settlements, symbol, month)
     settlement_date = settlements["settlement_date"]
-    step_size = PRODUCT_SYMBOLS[symbol]["step"]
+    step_size = get_step_size(settlements, month)
 
     T = float((futures_month["expiration"] - settlement_date).days) / 365
     strikes = get_strikes(options_month)
@@ -260,7 +268,7 @@ def main(symbol, month):
     # options month[call_or_put][strike][OI/vol/price/delta/gamma]
     get_price_ladder(settlements, symbol, month)
 
-    step_size = PRODUCT_SYMBOLS[symbol]["step"]
+    step_size = get_step_size(settlements, month)
     averages = get_average_option(settlements["options"][month])
     settlement_date = settlements["settlement_date"]
 

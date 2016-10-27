@@ -103,10 +103,10 @@ def oi_month_line(symbol, month, options):
     line += " & {0:,.0f} & {1:,.0f}".format(
         total_delta["CALL"],
         total_delta["PUT"])
-    line += " & {0:,.0f} & {1:,.0f}".format(
+    line += " & {0:.0f} & {1:.0f}".format(
         average_options["CALL"],
         average_options["PUT"])
-    line += " & {0:,.0f} \\\\\n".format(average_options["TOTAL"])
+    line += " & {0:.0f} \\\\\n".format(average_options["TOTAL"])
 
     return line
 

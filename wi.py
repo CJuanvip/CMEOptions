@@ -64,6 +64,15 @@ def get_step_size(settlements, month):
     options_month = settlements["options"][month]
 
     strikes = get_strikes(options_month)
+
+    no_oi_strikes = []
+    for (index, strike) in enumerate(strikes):
+        if options_month["CALL"][strike]["open_interest"] == 0:
+            if options_month["PUT"][strike]["open_interest"] == 0:
+                no_oi_strikes.append(index)
+    for index in sorted(no_oi_strikes, reverse=True):
+        del strikes[index]
+
     steps = []
     for (index, strike) in enumerate(strikes):
         try:
@@ -165,16 +174,29 @@ def theo_greek_at_price(settlements, symbol, month, greek, theo_price):
     price_ladder = get_price_ladder(settlements, symbol, month)
 
     greeks = []
+    calls = []
+    puts = []
     for price in price_ladder:
         totals = calc_total_greek(skewed_months[price], greek)
         greeks.append(totals["CALL"] + totals["PUT"])
+        calls.append(totals["CALL"])
+        puts.append(totals["PUT"])
 
     (a, b, c) = polyfit(price_ladder, greeks, 2)
+    (d, e, f) = polyfit(price_ladder, calls, 2)
+    (g, h, i) = polyfit(price_ladder, puts, 2)
 
     theo_greek = (a * theo_price * theo_price + b * theo_price + c)
+    call_greek = (d * theo_price * theo_price + e * theo_price * f)
+    put_greek = (g * theo_price * theo_price + h * theo_price * i)
+    
     coefficients = (a, b, c)
+    c_coef = (d, e, f)
+    p_coef = (g, h, i)
 
-    return {greek: theo_greek, "coefficients": coefficients}
+    return {greek: theo_greek, "coefficients": coefficients,
+            "CALL": call_greek, "call_coefficients": c_coef,
+            "PUT": put_greek, "put_coefficients": p_coef}
 
 
 def theo_price_at_greek(coefficients, greek):
@@ -269,13 +291,19 @@ def main(symbol, month):
     get_price_ladder(settlements, symbol, month)
 
     step_size = get_step_size(settlements, month)
+
     averages = get_average_option(settlements["options"][month])
     settlement_date = settlements["settlement_date"]
 
-    greek = "delta"
-    theo_price = 350
+
+    greek = "gamma"
+    theo_price = 1000
     #coefficients = theo_greek_at_price(skewed_months, greek, price_ladder, theo_price)["coefficients"]
     theo = theo_greek_at_price(settlements, symbol, month, greek, theo_price)
+
+    print(theo["call_coefficients"])
+    print(theo["put_coefficients"])
+    sys.exit(0)
 
     coefficients = theo["coefficients"]
     theo_delta = 0

@@ -17,7 +17,8 @@ def png_setup(dict_arg, symbol, month, chart_var):
     sorted_keys.sort()
 
     for key in sorted_keys:
-        r_price += "{0},".format(int(key))
+        r_price += "{0},".format(round(key, 
+            sp.PRODUCT_SYMBOLS[symbol]["sig_figs"]))
         r_calls += "{0},".format(dict_arg[key]["CALL"])
         r_puts += "{0},".format(dict_arg[key]["PUT"])
 
@@ -54,17 +55,6 @@ def option_greek_png(skewed_months, symbol, month, greek):
         total_greek = wi.calc_total_greek(skewed_months[key], greek)
         total_greek_dict[key] = total_greek
 
-
-    # sorted_keys = []
-    # for key in skewed_months.keys():
-    #     sorted_keys.append(key)
-    # sorted_keys.sort()
-
-    # for key in sorted_keys:
-    #     print("k: {0}\tv: {1}".format(key, total_greek_dict[key]["CALL"] + total_greek_dict[key]["PUT"]))
-
-    # sys.exit(0)
-        
     (r_script, img_name) = png_setup(total_greek_dict, symbol, month, greek)
     r_script += """y_min <- min(c(calls,puts))\n
                    y_max <- max(c(calls,puts,calls+puts))\n
@@ -84,6 +74,7 @@ def option_greek_png(skewed_months, symbol, month, greek):
     write_png(r_script, img_name)
 
     return img_name
+
 
 def stacked_options_png(settlements, symbol, month):
 
@@ -123,9 +114,8 @@ def make_all(settlements, symbol, month):
 def main(symbol, month):
     settlements = sp.get_all_settlements(symbol)
     skewed_months = wi.make_skewed_months(settlements, symbol, month)
-    # make_all(settlements, symbol, month)
-    # stacked_options_png(settlements, symbol, month)
-    option_greek_png(skewed_months, symbol, month, "delta")
+
+    make_all(settlements, symbol, month)
 
 
 if __name__ == "__main__":

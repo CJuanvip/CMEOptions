@@ -93,7 +93,8 @@ def oi_month_line(symbol, month, options):
     month_abbreviation = "{0}{1}".format(MONTH_LETTERS[month[:3]], month[-1])
     average_options = wi.get_average_option(options)
     total_delta = wi.calc_total_greek(options, 'delta')
-    
+    sig_figs = sp.PRODUCT_SYMBOLS[symbol]["sig_figs"]
+
     line = "{0}{1}".format(symbol, month_abbreviation)
     for contract in ["CALL", "PUT"]:
         total_oi = 0
@@ -103,10 +104,11 @@ def oi_month_line(symbol, month, options):
     line += " & {0:,.0f} & {1:,.0f}".format(
         total_delta["CALL"],
         total_delta["PUT"])
-    line += " & {0:.0f} & {1:.0f}".format(
-        average_options["CALL"],
-        average_options["PUT"])
-    line += " & {0:.0f} \\\\\n".format(average_options["TOTAL"])
+    line += " & {0} & {1}".format(
+        round(average_options["CALL"], sig_figs),
+        round(average_options["PUT"], sig_figs))
+    line += " & {0} \\\\\n".format(
+        round(average_options["TOTAL"], sig_figs))
 
     return line
 

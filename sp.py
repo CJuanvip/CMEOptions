@@ -134,7 +134,6 @@ def isolate_commodity(settles, symbol):
     if not os.path.isfile(comm_file):
         on = False
         output = ""
-        settlements = open(all_settles, "r")
 
         with open(all_settles, "r") as settlements:
             while True:
@@ -325,17 +324,20 @@ def d2(v, S, K, T, r=INTEREST_RATE):
     return D2
 
 
-def make_options_dict(settles, symbol, futures_dict, month, settlement_date):
+def make_options_dict(settles, symbol, underlying, month, expiration_date, settlement_date):
 
     file_name = os.path.join(settles["directory"], settles["file_name"])
-    options_dict = {"CALL": {}, "PUT": {}}
+    options_dict = {"expiration_date": expiration_date, 
+                    "underlying": underlying,
+                    "CALL": {}, 
+                    "PUT": {}}
 
     with open(file_name, "r") as settlements:
         on = False
         call_or_put = ""    # will be "CALL" or "PUT"
-        S = futures_dict[month]["price"]
-        T = float((futures_dict[month]["expiration"] - settlement_date).days) / 365
-        prev_line = ";lakjsdf"
+        S = underlying["price"]
+        T = float((expiration_date - settlement_date).days) / 365
+        prev_line = None
 
         while True:
             theline = settlements.readline()
@@ -382,6 +384,58 @@ def make_options_dict(settles, symbol, futures_dict, month, settlement_date):
     return options_dict
 
 
+def get_options_months(settles, symbol):
+    all_settles = os.path.join(settles["directory"], settles["file_name"])
+
+    options_months = []
+    with open(all_settles, "r") as settlements:
+        while True:
+            theline = settlements.readline()
+
+            if len(theline) == 0:
+                break
+
+            month = None
+            if PRODUCT_SYMBOLS[symbol]["options"] in theline:
+                if not PRODUCT_SYMBOLS[symbol]["has short-dated"]:
+                    month = theline.split()[1]
+                elif not PRODUCT_SYMBOLS[symbol]["short-dated"] in theline:
+                    month = theline.split()[1]
+
+            if month and not month in options_months:
+                options_months.append(month)
+
+    return options_months
+
+
+def match_underlying(option, futures):
+    if option in futures.keys():
+        return futures[option]
+
+    months = ["JAN","FEB","MAR","APR","JUN","JLY","AUG","SEP","OCT","NOV","DEC"]
+    option_month = option[:3]
+    option_year = int(option[-2:])
+
+    option_month_index = months.index(option_month)
+    underlying_year = option_year
+    underlying = None
+
+    while not underlying:
+        try:
+            underlying_month = months[option_month_index]
+        except IndexError:
+            option_month_index = 0
+            underlying_month = months[option_month_index]
+            underlying_year += 1
+        try:
+            underlying = futures["{0}{1}".format(underlying_month, underlying_year)]
+            break
+        except KeyError:
+            option_month_index += 1
+            
+    return underlying
+
+
 def get_all_settlements(symbol):
     
     settlements = get_settlements()
@@ -391,12 +445,17 @@ def get_all_settlements(symbol):
     settlements = isolate_commodity(settlements, symbol)
     futures = make_futures_dict(settlements, symbol, expiration_dict)
 
+    options_months = get_options_months(settlements, symbol)
+
     options = {}
-    for key in futures.keys():
-        options[key] = make_options_dict(settlements,
+    for month in options_months:
+        underlying = match_underlying(month, futures)
+        expiration_date = expiration_dict[month]
+        options[month] = make_options_dict(settlements,
                                          symbol,
-                                         futures,
-                                         key,
+                                         underlying,
+                                         month,
+                                         expiration_date,
                                          settlement_date)
 
     empty_keys = []
@@ -410,10 +469,9 @@ def get_all_settlements(symbol):
     return {"futures": futures, "options": options, "settlement_date": settlement_date}
 
 
-def main(symbol, month):
+def main(symbol):
     settlements = get_all_settlements(symbol)
 
-    sys.exit(0)
     futures = settlements["futures"]
     options = settlements["options"]
 
@@ -442,5 +500,5 @@ def main(symbol, month):
 if __name__ == '__main__':
 
     symbol = sys.argv[1]
-    month = sys.argv[2]
-    main(symbol, month)
+    # month = sys.argv[2]
+    main(symbol)

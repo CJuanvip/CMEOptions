@@ -86,17 +86,17 @@ def get_step_size(settlements, month):
 
 def get_price_ladder(settlements, symbol, month):
 
-    futures_month = settlements["futures"][month]
+    underlying_month = settlements["options"][month]["underlying"]
     options_month = settlements["options"][month]
     averages = get_average_option(options_month)
 
     step_size = get_step_size(settlements, month)
 
-    floor = futures_month["price"]
+    floor = underlying_month["price"]
     while averages["PUT"] < floor:
         floor = floor - step_size
 
-    ceiling = futures_month["price"]
+    ceiling = underlying_month["price"]
     while ceiling < averages["CALL"]:
         ceiling = ceiling + step_size
 
@@ -131,17 +131,17 @@ def calc_total_greek(options_month, greek):
 def make_skewed_months(settlements, symbol, month):
 
     options_month = settlements["options"][month]
-    futures_month = settlements["futures"][month]
+    underlying_month = settlements["options"][month]["underlying"]
     price_ladder = get_price_ladder(settlements, symbol, month)
     settlement_date = settlements["settlement_date"]
     step_size = get_step_size(settlements, month)
 
-    T = float((futures_month["expiration"] - settlement_date).days) / 365
+    T = float((underlying_month["expiration"] - settlement_date).days) / 365
     strikes = get_strikes(options_month)
 
     skewed_months = {}
     for entry in enumerate(price_ladder):
-        step = entry[0] - price_ladder.index(futures_month["price"])
+        step = entry[0] - price_ladder.index(underlying_month["price"])
         S = entry[1]
         skewed_months[S] = {}
         for contract in ["CALL", "PUT"]:
@@ -283,8 +283,8 @@ def get_itm_ladder(settlements, symbol, month):
 def main(symbol, month):
     settlements = sp.get_all_settlements(symbol)
 
-    futures_month = settlements["futures"][month]
-    # futures_month: expiration date, underlying price, and open interest
+    underlying_month = settlements["options"][month]["underlying"]
+    # underlying_month: expiration date, underlying price, and open interest
 
     options_month = settlements["options"][month]
     # options month[call_or_put][strike][OI/vol/price/delta/gamma]

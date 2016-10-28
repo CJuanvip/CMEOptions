@@ -120,6 +120,29 @@ def oi_month_line(symbol, month, options):
     return line
 
 
+def big_months(options):
+    total_oi = {}
+    for month in options.keys():
+        oi = 0
+        for contract in ["CALL", "PUT"]:
+            for strike in options[month][contract].keys():
+                oi += options[month][contract][strike]["open_interest"]
+        total_oi[oi] = month
+
+    oi_list = []
+    for oi in total_oi.keys():
+        oi_list.append(oi)
+    oi_list.sort(reverse=True)
+
+    oi_list = oi_list[:3]
+    month_list = []
+    for oi in oi_list:
+        month_list.append(total_oi[oi])
+    month_list.sort(key=lambda month: MONTH_LETTERS[month[:3]])
+    month_list.sort(key=lambda month: month[-2:])
+    return month_list
+
+
 def oi_tex_maker(symbols, oi=True, graphics=True):
 
     oi_out = ""
@@ -128,8 +151,8 @@ def oi_tex_maker(symbols, oi=True, graphics=True):
         settlements = sp.get_all_settlements(symbol)
         oi_out += make_oi_header(symbol)
         options = settlements["options"]
-        futures = settlements["futures"]
         months = sort_months(options)
+        underlying = options[months[0]]["underlying"]
         for month in months:
             month_line = oi_month_line(symbol, month, options[month])
             oi_out += month_line
@@ -139,7 +162,7 @@ def oi_tex_maker(symbols, oi=True, graphics=True):
         else:
             oi_out += make_oi_footer()
 
-        for month in months[:3]:
+        for month in big_months(options):
             imgs = plotter.make_all(settlements, symbol, month)
             for img in imgs:
                 graphics += "\\includegraphics{"

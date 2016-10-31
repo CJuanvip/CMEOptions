@@ -206,12 +206,14 @@ def make_futures_dict(settles, symbol, expiration_dict):
                     settlement = ticks_to_decimal(ticks, symbol)
                 except ValueError:
                     print(theline)
+                    print("Settlement parsing error: settlements blank")
                     sys.exit(0)
                 try:
                     expiration = expiration_dict[contract]
                     futures_dict[contract] = {"price": settlement,
                                               "expiration": expiration,
-                                              "open_interest": open_interest}
+                                              "open_interest": open_interest,
+                                              "name": contract}
                 except KeyError:
                     pass
 

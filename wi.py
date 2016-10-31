@@ -128,6 +128,17 @@ def calc_total_greek(options_month, greek):
     return total_greek
 
 
+def time_skew_months(settlements, symbol, month):
+
+    options_month = settlements["options"][month]
+    settlement_date = settlements["settlement_date"]
+    expiration_date = settlements["options"]["underlying"]["expiration_date"]
+
+    dte = (expiration_date - settlement_date).days
+
+    pass
+
+
 def make_skewed_months(settlements, symbol, month):
 
     options_month = settlements["options"][month]

@@ -45,12 +45,12 @@ def make_oi_header(symbol):
     header += sp.PRODUCT_SYMBOLS[symbol]["name"]
     header += " Options}\n"
     header += "\\centering\n"
-    header += "\\begin{tabular}{| r | r | r | r | r | r | r | r |}\n"
+    header += "\\begin{tabular}{| r | r | r | r | r | r | r | r | r |}\n"
     header += "\\hline\n"
-    header += "Contract & Num. Calls & Num. Puts & Call Delta & Put Delta & Avg Call & Avg Put & Avg Option\n"
+    header += "Contract & Num. Calls & Num. Puts & Call Delta & Put Delta & Avg Call & Avg Put & Avg Option & Open Futures\n"
     header += "\\\\\n"
     header += "\\hline\n"
-    header += "& & & & & & & \\\\\n"
+    header += "& & & & & & & & \\\\\n"
     header += "\\hline\n"
 
     return header
@@ -108,14 +108,18 @@ def oi_month_line(symbol, month, options):
         line += " & {0} & {1}".format(
             int(round(average_options["CALL"], sig_figs)),
             int(round(average_options["PUT"], sig_figs)))
-        line += " & {0} \\\\\n".format(
+        line += " & {0}".format(
             int(round(average_options["TOTAL"], sig_figs)))
     else:
         line += " & {0} & {1}".format(
             round(average_options["CALL"], sig_figs),
             round(average_options["PUT"], sig_figs))
-        line += " & {0} \\\\\n".format(
+        line += " & {0}".format(
             round(average_options["TOTAL"], sig_figs))
+    if month == options["underlying"]["name"]:
+        line += " & {0} \\\\\n".format(options["underlying"]["open_interest"])
+    else:
+        line += " & \\\\\n"
         
     return line
 

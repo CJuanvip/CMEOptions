@@ -22,13 +22,13 @@ def png_setup(dict_arg, symbol, month, chart_var):
         r_calls += "{0},".format(dict_arg[key]["CALL"])
         r_puts += "{0},".format(dict_arg[key]["PUT"])
 
-    img_name = "{0}_{1}_{2}.png".format(symbol, month, chart_var)
-    r_script = 'png("{0}_{1}_{2}.png")\n'.format(symbol, month, chart_var)
-    r_script += "options(scipen=999)\n"
+    r_script = ""
     for string in [r_price, r_calls, r_puts]:
         r_script += string[:-1]
         r_script += ")\n"
 
+    img_name = "{0}_{1}_{2}.png".format(symbol, month, chart_var)
+    
     return (r_script, img_name)
 
 
@@ -55,21 +55,16 @@ def option_greek_png(skewed_months, symbol, month, greek):
         total_greek = wi.calc_total_greek(skewed_months[key], greek)
         total_greek_dict[key] = total_greek
 
-    (r_script, img_name) = png_setup(total_greek_dict, symbol, month, greek)
-    r_script += """y_min <- min(c(calls,puts))\n
-                   y_max <- max(c(calls,puts,calls+puts))\n
-                   plot(c(min(price),max(price)), c(y_min,y_max),
-                        type="n",xlab="Price",ylab="{0}",
-                        main="{1} {2} Option Market Total {0}")\n
-                   lines(price,calls,col="red")\n
-                   lines(price,puts,col="darkblue")\n
-                   lines(price,calls+puts,col="purple")\n
-                   legend("bottom",
-                          legend=c("Call {0}","Put {0}","Total {0}"),
-                          bty="n",fill=c("red","darkblue","purple"),
-                          horiz=TRUE)\n
-                   dev.off()""".format(greek, month,
-                                       sp.PRODUCT_SYMBOLS[symbol]["name"])
+    (args, img_name) = png_setup(total_greek_dict, symbol, month, greek)
+
+    with open("greek_template.R", "r") as f:
+        template = f.read()
+
+    r_script = template.format(symbol=symbol,
+                               args=args,
+                               month=month,
+                               greek=greek, 
+                               commodity=sp.PRODUCT_SYMBOLS[symbol]["name"])
 
     write_png(r_script, img_name)
 
@@ -80,22 +75,15 @@ def stacked_options_png(settlements, symbol, month):
 
     itm_options = wi.get_itm_ladder(settlements, symbol, month)
 
-    (r_script, img_name) = png_setup(itm_options, symbol, month, "stack")
-    r_script += """m <- matrix(c(price,calls,puts),nrow=3,byrow=T)\n
-                   barplot(m[2:3,],
-                           col=c("darkblue","red"),
-                           xlab="Price",
-                           ylab="Contracts",
-                           names=m[1,],
-                           cex.axis=0.75,
-                           cex.names=0.75,
-                           las=2,
-                           main="{0} {1} in the Money Options")\n
-                   legend("top",legend=c("ITM Calls","ITM Puts"),
-                          bty="n",fill=c("darkblue","red"))\n
-                   dev.off()""".format(month,
-                                       sp.PRODUCT_SYMBOLS[symbol]["name"])
+    (args, img_name) = png_setup(itm_options, symbol, month, "stack")
 
+    with open("stack_template.R", "r") as f:
+        template = f.read()
+
+    r_script = template.format(symbol=symbol,
+                               args=args,
+                               month=month, 
+                               commodity=sp.PRODUCT_SYMBOLS[symbol]["name"])
     write_png(r_script, img_name)
 
     return img_name

@@ -65,15 +65,15 @@ def make_oi_footer():
 
     
 def make_oi_caption():
-    footer = "\\hline\n"
-    footer += "\\end{tabular}\n"
-    footer += "\\caption*{This table shows "
-    footer += "\\newline 1) the number of open options contracts in the market. "
-    footer += "\\newline 2) the futures equivalent open interest in options on a delta weighted basis. "
-    footer += "\\newline 3) the simple average open interest for calls, puts, and combined positions.}\n"
-    footer += "\\end{table}\n"
+    caption = "\\hline\n"
+    caption += "\\end{tabular}\n"
+    caption += "\\caption*{This table shows "
+    caption += "\\newline 1) the number of open options contracts in the market. "
+    caption += "\\newline 2) the futures equivalent open interest in options on a delta weighted basis. "
+    caption += "\\newline 3) the simple average open interest for calls, puts, and combined positions.}\n"
+    caption += "\\end{table}\n"
 
-    return footer
+    return caption
     
 
 def sort_months(options):

@@ -307,13 +307,11 @@ def main(symbol, month):
     settlement_date = settlements["settlement_date"]
 
 
-    greek = "gamma"
-    theo_price = 1000
+    greek = "delta"
+    theo_price = 345
     #coefficients = theo_greek_at_price(skewed_months, greek, price_ladder, theo_price)["coefficients"]
     theo = theo_greek_at_price(settlements, symbol, month, greek, theo_price)
-
-    print(theo["call_coefficients"])
-    print(theo["put_coefficients"])
+    print(theo["delta"])
     sys.exit(0)
 
     coefficients = theo["coefficients"]

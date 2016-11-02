@@ -5,7 +5,6 @@
 *.pdf
 *.aux
 *.gz
-*.tex
 *.swp
 *.log
 *~

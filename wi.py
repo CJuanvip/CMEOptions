@@ -67,9 +67,12 @@ def get_step_size(settlements, month):
 
     no_oi_strikes = []
     for (index, strike) in enumerate(strikes):
-        if options_month["CALL"][strike]["open_interest"] == 0:
-            if options_month["PUT"][strike]["open_interest"] == 0:
-                no_oi_strikes.append(index)
+        try:
+            if options_month["CALL"][strike]["open_interest"] == 0:
+                if options_month["PUT"][strike]["open_interest"] == 0:
+                    no_oi_strikes.append(index)
+        except KeyError:
+            no_oi_strikes.append(index)
     for index in sorted(no_oi_strikes, reverse=True):
         del strikes[index]
 
@@ -173,8 +176,11 @@ def make_skewed_months(settlements, symbol, month):
                     price = put_call_parity(vol, S, K, T)
 
                 skewed_months[S][contract][K] = make_strike_dict(S, K, T, price, contract)
-                skewed_months[S][contract][K]["open_interest"] = options_month[contract][K]["open_interest"]
-                skewed_months[S][contract][K]["price"] = price
+                try:
+                    skewed_months[S][contract][K]["open_interest"] = options_month[contract][K]["open_interest"]
+                    skewed_months[S][contract][K]["price"] = price
+                except KeyError:
+                    pass
 
     return skewed_months
 
@@ -284,9 +290,15 @@ def get_itm_ladder(settlements, symbol, month):
                               "PUT": 0}
         for strike in strikes:
             if strike < price:
-                itm_options[price]["CALL"]  += options_month["CALL"][strike]["open_interest"]
+                try:
+                    itm_options[price]["CALL"]  += options_month["CALL"][strike]["open_interest"]
+                except KeyError:
+                    pass
             if strike > price:
-                itm_options[price]["PUT"] += options_month["PUT"][strike]["open_interest"]
+                try:
+                    itm_options[price]["PUT"] += options_month["PUT"][strike]["open_interest"]
+                except KeyError:
+                    pass
 
     return itm_options
 

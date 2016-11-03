@@ -144,7 +144,7 @@ def tex_to_pdf(tex, symbol, settlement_date):
     subprocess.call("latex --output-format=pdf {0}".format(os.path.join(script_dir, "{0}.tex".format(file_name))),
                     shell=True)
     subprocess.call("mv {0}.pdf reports".format(file_name), shell=True)
-    #subprocess.call("rm {0}.tex".format(file_name), shell=True)
+    subprocess.call("rm {0}.tex".format(file_name), shell=True)
 
     for root, dirs, files in os.walk(script_dir):
         for currentFile in files:

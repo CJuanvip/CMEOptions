@@ -4,55 +4,14 @@ import urllib.request
 import numpy
 from scipy import optimize, stats
 import sys
+import json
 
-PRODUCT_SYMBOLS = {"S": {"name": "Soybeans",
-                         "futures": "S Soybean Futures",
-                         "options": "SOYBEANS OPTION",
-                         "strike_divisor": 10,
-                         "has short-dated": True,
-                         "short-dated": "Short-Dated New Crop Soybean Option",
-                         "tick_size": 0.125,
-                         "sig_figs": 0},
-                   "C": {"name": "Corn",
-                         "futures": "C Corn Future",
-                         "options": "Corn Options",
-                         "strike_divisor": 10,
-                         "has short-dated": True,
-                         "short-dated": "Short-Dated New Crop Corn Option",
-                         "tick_size": 0.125,
-                         "sig_figs": 0},
-                    "W": {"name": "Wheat",
-                          "futures": "W Wheat Futures",
-                          "options": "Wheat Options",
-                          "strike_divisor": 10,
-                          "has short-dated":True,
-                          "short-dated": "Short-Dated New Crop Wheat Option",
-                          "tick_size": 0.125,
-                          "sig_figs": 0},
-                    "KC": {"name": "Kansas City Wheat",
-                           "futures": "KEF Kansas City Wheat Futures",
-                           "options": "Kansas City Wheat Options",
-                           "strike_divisor": 10,
-                           "has short-dated": False,
-                           "tick_size": 0.125,
-                           "sig_figs": 0},
-                    "SM": {"name": "Soybean Meal",
-                           "futures": "SM Soybean Meal Futures",
-                           "options": "Soybean Meal Options",
-                           "strike_divisor": 100,
-                           "has short-dated": False,
-                           "sig_figs": 0},
-                    "BO": {"name": "Soybean Oil",
-                           "futures": "BO Soybean Oil Futures",
-                           "options": "Soybean Oil Options",
-                           "strike_divisor": 1000,
-                           "has short-dated": False,
-                           "sig_figs": 1}
-                   }
+
+PRODUCT_SYMBOLS = json.loads(open("commodities.json", "r").read())
 INTEREST_RATE = 0.01
 
 
-def get_settlements():
+def get_settlements(symbol):
     """
     Retrieve 6:00PM settlements from the CME website.
     Saves to a file named file_name.
@@ -66,7 +25,9 @@ def get_settlements():
             if i.weekday() < 5:
                 break
 
-    file_name = "{0}_{1}_{2}_settlements.txt".format(i.day, i.month, i.year)
+    exchange = PRODUCT_SYMBOLS[symbol]["exchange"]
+
+    file_name = "{0}_{1}_{2}_{3}_settlements.txt".format(i.day, i.month, i.year, exchange)
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     dest_dir = os.path.join(script_dir, "Settlements")
@@ -76,7 +37,7 @@ def get_settlements():
     file_path = os.path.join(dest_dir, file_name)
 
     if not os.path.isfile(file_path):
-        url = "ftp://ftp.cmegroup.com/pub/settle/stlags"
+        url = "ftp://ftp.cmegroup.com/pub/settle/stl{0}".format(exchange)
         urllib.request.urlretrieve(url, file_path)
     return {"file_name": file_name, "directory": dest_dir}
 
@@ -99,10 +60,11 @@ def get_settlement_date(settlements):
     return settlement_date
 
 
-def make_expiration_dict():
+def make_expiration_dict(symbol):
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    file_name = os.path.join(script_dir, "expiration_dates.csv")
+    exchange = PRODUCT_SYMBOLS[symbol]["exchange"]
+    file_name = os.path.join(script_dir, "expiration_dates_{0}.csv".format(exchange))
 
     expiration_dict = {}
 
@@ -440,10 +402,10 @@ def match_underlying(option, futures):
 
 def get_all_settlements(symbol):
     
-    settlements = get_settlements()
+    settlements = get_settlements(symbol)
 
     settlement_date = get_settlement_date(settlements)
-    expiration_dict = make_expiration_dict()
+    expiration_dict = make_expiration_dict(symbol)
     settlements = isolate_commodity(settlements, symbol)
     futures = make_futures_dict(settlements, symbol, expiration_dict)
 

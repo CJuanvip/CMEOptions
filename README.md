@@ -2,6 +2,28 @@
 
 A collection of functions to analyze the CME grain options markets.
 
+## Requirements
+
+These scripts rely on Python3 (incl. `numpy` and `scipy`), R, LaTeX (incl. graphicx). R and LaTeX should be in the user's PATH. Otherwise, the scripts are system-independent.
+
+## Usage
+
+`python tp.py (symbol)` where `(symbol)` is one of the commodities defined in `commodities.json`. The system is extensible so more commodities can be added to this json doc as long as each argument is well-defined. 
+
+### commodities.json
+
+Each user-defined symbol must have the following attributes, with examples for the symbol 'S':
+
+`name`: a user-defined long-form name, e.g. `"Soybeans"`
+`futures`: the unique string identifying futures in the CME settlements, e.g. `"S Soybean Futures"`
+`options`: the unique string identifying options in the CME settlements, e.g. `"SOYBEAN OPTIONS"`
+`strike-divisor`: the divsor to bring strikes to the same order of magnitude as settlement prices. e.g. `100` (9000 -> 90)
+`has short-dated`: alert to the existence of short-dated option to prevent confusion with the standard options, e.g. `true`
+`short-dated`: Only necessary if the above is true, the unique string indentifying short-dated options, e.g. `"Short-Dated New Crop Soybean Option"`
+`tick_size`: Only necessary if ticks are not priced in base-10, this is the conversion of a tick to base-10, e.g. `0.125`
+`sig_figs`: significant decimal figures to use in calculations and charts, e.g. `0`
+`exchange`: the CME exchange that trades this commodity, e.g. `ags`
+
 ## sp.py
 
 sp.py automates the fetching and parsing of the information available from the CME. The source data is located at [this ftp link][ftp://ftp.cmegroup.com/pub/settle/stlags].
@@ -13,7 +35,7 @@ import sp
 (commodity_futures, commodity_options) = sp.get_all_options(symbol)
 ```
 
-where `symbol` is a supported CME commodity symbol (e.g. `'S'` for soybeans or `'C'` for corn).  This returns two related dictionaries of the form `(futures, options)`. 
+where `symbol` is a supported CME commodity symbol from commodities.json (e.g. `'S'` for soybeans or `'C'` for corn).  This returns two related dictionaries of the form `(futures, options)`. 
 
 `futures` takes the form `futures[month][expiration, price]` where `month` is a three character month abbreviation and a two character year abbreviation (e.g. `NOV16`) and expiration is a `datetime.date` object.
 
@@ -49,7 +71,19 @@ In this case, the user can call `get_average_option` to get a baseline number, s
 
 ## `tp.py`
 
-`tp.py` is the TeX processing script. It draws on the data scraping of `sp.py` and the data processing of `wi.py` to format the data in a presentable PDF. Currently, `tp.py` implements `oi_tex_maker()`, which presents a snapshot of the options market, with average call, put, and options strikes as well as total open delta position in the market.
+`tp.py` is a TeX creation and script that leverages the scraping of `sp.py`, the calculations of `wi.py`, and the graphics creation of `plotter.py` to create an overview of the state of the options market. By default, `tp.py` will create a table of the options open interest for each option month on the first page. Then, it will attach graphics for the three largest options months detailing how options go in and out of the money as price changes, and how delta and gamma change as price changes.
+
+## `plotter.py`
+
+`plotter.py` leverages the scraping of `sp.py` and calculations of `wi.py` to create graphics showing the state of the options market.
+
+### `stacked_options_png()`
+
+This graph stacks in-the-money options at prices from the average put to the average call to show how options go in and out of the money as price chages.
+
+### `option_greek_png()`
+
+This graph charts the change of the desired greek as price changes from the average put to the average call.
 
 ## `odb.py`
 

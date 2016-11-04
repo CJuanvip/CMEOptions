@@ -167,6 +167,9 @@ def make_futures_dict(settles, symbol, expiration_dict):
                 try:
                     settlement = ticks_to_decimal(ticks, symbol)
                 except ValueError:
+                    if l[0] == "TOTAL":
+                        on = False
+                        break
                     print(theline)
                     print("Settlement parsing error: settlements blank")
                     sys.exit(0)

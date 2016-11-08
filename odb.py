@@ -109,18 +109,24 @@ def add_data(symbol, settlements, options_tp):
 
     futures_data = get_futures_data(symbol, settlements)
 
+    date = settlements["settlement_date"].strftime("%d-%m-%y")
+
     conn = sqlite3.connect("odb.db")
 
     with sqlite3.connect("odb.db") as conn:
         cur = conn.cursor()
         create_tables(cur)
         
-        for future in futures_data:
-            add_futures_data(cur, future)
-        
-        conn.commit()
+        current = cur.execute('SELECT * FROM Futures WHERE Date="{0}" AND Symbol="{1}"'.format(date, symbol))
+        if not current.fetchone():
+            for future in futures_data:
+                add_futures_data(cur, future)
+            conn.commit()
 
-        options_data = get_options_data(symbol, settlements, options_tp, cur)
+            options_data = get_options_data(symbol, settlements, options_tp, cur)
 
-        for option in options_data:
-            add_options_data(cur, option)
+            for option in options_data:
+                add_options_data(cur, option)
+            conn.commit()
+        else:
+            print("Settlements already committed to database")

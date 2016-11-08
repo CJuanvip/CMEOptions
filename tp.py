@@ -1,4 +1,4 @@
-import sp
+from sp import PRODUCT_SYMBOLS
 import wi
 import plotter
 import os
@@ -43,35 +43,48 @@ def oi_month_line(symbol, month, options):
     month_abbreviation = "{0}{1}".format(MONTH_LETTERS[month[:3]], month[-1])
     average_options = wi.get_average_option(options)
     total_delta = wi.calc_total_greek(options, 'delta')
-    sig_figs = sp.PRODUCT_SYMBOLS[symbol]["sig_figs"]
+    sig_figs = PRODUCT_SYMBOLS[symbol]["sig_figs"]
 
-    line = "{0}{1}".format(symbol, month_abbreviation)
+    month_dict = {}
+
+    month_dict["month"] = month
+    month_dict["Contract"] = "{0}{1}".format(symbol, month_abbreviation)
+    line = month_dict["Contract"]
     for contract in ["CALL", "PUT"]:
         total_oi = 0
         for key in options[contract].keys():
             total_oi += options[contract][key]["open_interest"]
+        month_dict["{0}_oi".format(contract)] = total_oi
         line += " & {0:,.0f}".format(total_oi)
+
+    month_dict["CALL_delta"] = total_delta["CALL"]
+    month_dict["PUT_delta"] = total_delta["PUT"]
     line += " & {0:,.0f} & {1:,.0f}".format(
-        total_delta["CALL"],
-        total_delta["PUT"])
+        month_dict["CALL_delta"],
+        month_dict["PUT_delta"])
+
+    month_dict["avg_CALL"] = average_options["CALL"]
+    month_dict["avg_PUT"] = average_options["PUT"]
+    month_dict["avg_TOTAL"] = average_options["TOTAL"]   
     if sig_figs == 0:
         line += " & {0} & {1}".format(
-            int(round(average_options["CALL"], sig_figs)),
-            int(round(average_options["PUT"], sig_figs)))
+            int(round(month_dict["avg_CALL"], sig_figs)),
+            int(round(month_dict["avg_PUT"], sig_figs)))
         line += " & {0}".format(
-            int(round(average_options["TOTAL"], sig_figs)))
+            int(round(month_dict["avg_TOTAL"], sig_figs)))
     else:
         line += " & {0} & {1}".format(
-            round(average_options["CALL"], sig_figs),
-            round(average_options["PUT"], sig_figs))
+            round(month_dict["avg_CALL"], sig_figs),
+            round(month_dict["avg_PUT"], sig_figs))
         line += " & {0}".format(
-            round(average_options["TOTAL"], sig_figs))
+            round(month_dict["avg_TOTAL"], sig_figs))
+
     if month == options["underlying"]["name"]:
         line += " & {0} \\\\\n".format(options["underlying"]["open_interest"])
     else:
         line += " & \\\\\n"
-        
-    return line
+  
+    return {"tex_string": line, "data": month_dict}
 
 
 def big_months(options, num_months=3):
@@ -97,21 +110,23 @@ def big_months(options, num_months=3):
     return month_list
 
 
-def oi_tex_maker(symbol, oi=True, graphics=True):
-
-    settlements = sp.get_all_settlements(symbol)
+def oi_tex_maker(settlements, symbol, oi=True, graphics=True):
         
     options = settlements["options"]
     months = sort_months(options)
-    commodity = sp.PRODUCT_SYMBOLS[symbol]["name"]
+    commodity = PRODUCT_SYMBOLS[symbol]["name"]
     settlement_date = settlements["settlement_date"]
     date_text = settlement_date.strftime("%B %d, %Y")
 
     months_tex = ""
+    month_data = {}
     if oi:
         for month in months:
             month_line = oi_month_line(symbol, month, options[month])
-            months_tex += month_line
+            months_tex += month_line["tex_string"]
+
+            month_data[month_line["data"]["month"]] = month_line["data"]
+
         months_tex += "\\hline\n"
 
     graphics_tex = ""
@@ -125,6 +140,8 @@ def oi_tex_maker(symbol, oi=True, graphics=True):
     tex = get_tex_template(date_text, commodity, months_tex, graphics_tex)
         
     tex_to_pdf(tex, symbol, settlement_date)
+
+    return month_data
 
 
 def tex_to_pdf(tex, symbol, settlement_date):

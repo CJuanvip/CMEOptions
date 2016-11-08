@@ -4,90 +4,123 @@ import sp
 import wi
 
 
-def create_table(cursor):
+def create_tables(cursor):
 
-    cursor.execute("""CREATE TABLE History(
-                      Symbol TEXT,
-                      Month TEXT,
-                      Date TEXT,
-                      Delta NUMERIC,
-                      Avg_Call NUMERIC, 
-                      Avg_Put NUMERIC, 
-                      Avg_Option NUMERIC, 
-                      Price NUMERIC, 
-                      Calls_ITM INT, 
-                      Calls_OTM INT,
-                      Puts_ITM INT,
-                      Puts_OTM INT,
-                      Futures_Open_Interest INT)""")
+    cursor.execute("""CREATE TABLE If NOT EXISTS Futures(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        Symbol TEXT,
+        Month TEXT,
+        Date TEXT,
+        Price NUMERIC, 
+        Open_Interest INT)""")
+
+    cursor.execute("""CREATE TABLE IF NOT EXISTS Options (
+        Month TEXT,
+        Date TEXT,
+        Num_Calls INT,
+        Num_Puts INT,
+        Delta_Calls NUMERIC,
+        Delta_Puts NUMERIC,
+        Avg_Call NUMERIC,
+        Avg_Put NUMERIC,
+        Avg_Total NUMERIC,
+        futures_id INTEGER,
+        FOREIGN KEY(futures_id) REFERENCES Futures(id))""")    
+
+    
+def add_futures_data(cursor, futures_data):
+
+    execute_command = "INSERT INTO Futures Values(NULL,"
+    execute_command += "'{0}','{1}','{2}','{3}','{4}')".format(
+        futures_data["symbol"],
+        futures_data["month"],
+        futures_data["date"],
+        futures_data["price"],
+        futures_data["oi"])
+    cursor.execute(execute_command)
+
+
+def add_options_data(cursor, options_data):
+
+    execute_command = "INSERT INTO Options Values("
+    execute_command += "'{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}')".format(
+        options_data["month"],
+        options_data["date"],
+        options_data["num_calls"],
+        options_data["num_puts"],
+        options_data["delta_calls"],
+        options_data["delta_puts"],
+        options_data["avg_call"],
+        options_data["avg_put"],
+        options_data["avg_total"],
+        options_data["underlying_id"])
+    cursor.execute(execute_command)
+
+
+def get_futures_data(symbol, settlements):
+
+    date = settlements["settlement_date"]
+    date = date.strftime("%d-%m-%y")
+    
+    futures_data = []
+    for key in settlements["futures"]:
+        datum = {}
+        datum["symbol"] = symbol
+        datum["month"] = key
+        datum["date"] = date
+        datum["price"] = settlements["futures"][key]["price"]
+        datum["oi"] = settlements["futures"][key]["open_interest"]
+        futures_data.append(datum)
+
+    return futures_data
     
 
-def add_datum(cursor, table):
+def get_options_data(symbol, settlements, options_tp, cursor):
 
-    cursor.execute("INSERT INTO History VALUES()".format(table))
+    date = settlements["settlement_date"]
+    date = date.strftime("%d-%m-%y")
 
-
-def add_data(cursor, table, data):
-
-    execute_command = "INSERT INTO {0} VALUES".format(table)
-    execute_command += "(?,?,?,?,?,?,?,?,?,?,?,?,?)"
-    cursor.executemany(execute_command, data)
-    
-    
-def main():
-
-    symbols = ['S', 'C', 'W']
-
-    data = []
-    for symbol in symbols:
-        
-        settlements = sp.get_all_settlements(symbol)
-        date = settlements["settlement_date"]
-        date = date.strftime("%d-%m-%y")
-        
-        for month in settlements["futures"].keys():
-            option_month = settlements["options"][month]
-            underlying_price = settlements["futures"][month]["price"]
-                
-            delta = wi.calc_total_greek(option_month, "delta")
-            averages = wi.get_average_option(option_month)
-            avg_call = averages["CALL"]
-            avg_put = averages["PUT"]
-            avg_opt = averages["TOTAL"]
-            price = settlements["futures"][month]["price"]
-            
-            options_count = wi.count_options(option_month, underlying_price)
-            calls_itm = options_count["CALL"]["ITM"]
-            calls_otm = options_count["CALL"]["OTM"]
-            puts_itm = options_count["PUT"]["ITM"]
-            puts_otm = options_count["PUT"]["OTM"]
-
-            futures_oi = settlements["futures"][month]["open_interest"]
-
-            data.append((symbol,
-                         month,
-                         date,
-                         delta,
-                         avg_call,
-                         avg_put,
-                         avg_opt,
-                         price,
-                         calls_itm,
-                         calls_otm,
-                         puts_itm,
-                         puts_otm,
-                         futures_oi))
-
-    conn = sqlite3.connect('odb.db')
-
-    with conn:
-
-        cursor = conn.cursor()
+    options_data = []
+    for key in options_tp:
+        datum = {}
+        underlying_month = sp.match_underlying(key, settlements["futures"])["name"]
+        underlying_cursor = cursor.execute('SELECT * FROM Futures WHERE Month = "{0}" AND Date = "{1}"'.format(underlying_month, date))
+        underlying = underlying_cursor.fetchone()
         try:
-          create_table(cursor)
-        except sqlite3.OperationalError:
-          pass
-        add_data(cursor, "History", data)
+            datum["underlying_id"] = underlying[0]
+            datum["month"] = key
+            datum["date"] = date
+            datum["num_calls"] = options_tp[key]["CALL_oi"]
+            datum["num_puts"] = options_tp[key]["PUT_oi"]
+            datum["delta_calls"] = options_tp[key]["CALL_delta"]
+            datum["delta_puts"] = options_tp[key]["PUT_delta"]
+            datum["avg_call"] = options_tp[key]["avg_CALL"]
+            datum["avg_put"] = options_tp[key]["avg_PUT"]
+            datum["avg_total"] = options_tp[key]["avg_TOTAL"]
+            options_data.append(datum)
+        except TypeError:
+            print("{0} not found in database".format(key))
+            print("searched for {0} underlying".format(underlying_month))
 
-if __name__ == '__main__':
-    main()
+    return options_data
+
+
+def add_data(symbol, settlements, options_tp):
+
+    futures_data = get_futures_data(symbol, settlements)
+
+    conn = sqlite3.connect("odb.db")
+
+    with sqlite3.connect("odb.db") as conn:
+        cur = conn.cursor()
+        create_tables(cur)
+        
+        for future in futures_data:
+            add_futures_data(cur, future)
+        
+        conn.commit()
+
+        options_data = get_options_data(symbol, settlements, options_tp, cur)
+
+        for option in options_data:
+            add_options_data(cur, option)

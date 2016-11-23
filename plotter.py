@@ -71,18 +71,25 @@ def option_greek_png(skewed_months, symbol, month, greek):
     return img_name
 
 
-def stacked_options_png(settlements, symbol, month):
+def stacked_options_png(settlements, symbol, month, name):
 
-    itm_options = wi.get_itm_ladder(settlements, symbol, month)
+    if name == "stack":
+        itm_options = wi.get_itm_ladder(settlements, symbol, month)
+        desc = "in the Money Options"
+    elif name == "pain":
+        itm_options = wi.get_pain_ladder(settlements, symbol, month)
+        desc = "Pain Value"
 
-    (args, img_name) = png_setup(itm_options, symbol, month, "stack")
+    (args, img_name) = png_setup(itm_options, symbol, month, name)
 
     with open("stack_template.R", "r") as f:
         template = f.read()
 
     r_script = template.format(symbol=symbol,
+                               graph=name,
+                               desc=desc,
                                args=args,
-                               month=month, 
+                               month=month,
                                commodity=sp.PRODUCT_SYMBOLS[symbol]["name"])
     write_png(r_script, img_name)
 
@@ -91,7 +98,8 @@ def stacked_options_png(settlements, symbol, month):
 
 def make_all(settlements, symbol, month):
     imgs = []
-    imgs.append(stacked_options_png(settlements, symbol, month))
+    imgs.append(stacked_options_png(settlements, symbol, month, "stack"))
+    imgs.append(stacked_options_png(settlements, symbol, month, "pain"))
     skewed_months = wi.make_skewed_months(settlements, symbol, month)
     imgs.append(option_greek_png(skewed_months, symbol, month, "delta"))
     imgs.append(option_greek_png(skewed_months, symbol, month, "gamma"))

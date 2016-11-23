@@ -1,4 +1,4 @@
-png("{symbol}_{month}_stack.png")
+png("{symbol}_{month}_{graph}.png")
 options(scipen=999)
 {args}
 m <- matrix(c(price, calls, puts),
@@ -12,7 +12,7 @@ barplot(m[2:3,],
         cex.axis=0.75,
         cex.names=0.75,
         las=2,
-        main="{month} {commodity} in the Money Options")
+        main="{month} {commodity} {desc}")
 legend("top",
        legend=c("ITM Calls","ITM Puts"),
        bty="n",

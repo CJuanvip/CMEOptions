@@ -303,6 +303,34 @@ def get_itm_ladder(settlements, symbol, month):
     return itm_options
 
 
+def get_pain_ladder(settlements, symbol, month):
+
+    price_ladder = get_price_ladder(settlements, symbol, month)
+    options_month = settlements["options"][month]
+
+    strikes = get_strikes(options_month)
+    pain_ladder = {}
+
+    for price in price_ladder:
+        pain_ladder[price] = {"CALL": 0,
+                       "PUT": 0}
+        for strike in strikes:
+            if strike < price:
+                try:
+                    pain = options_month["CALL"][strike]["open_interest"] * (price - strike)
+                    pain_ladder[price]["CALL"] += pain
+                except KeyError:
+                    pass
+            if strike > price:
+                try:
+                    pain = options_month["PUT"][strike]["open_interest"] * (strike - price)
+                    pain_ladder[price]["PUT"] += pain
+                except KeyError:
+                    pass
+
+    return pain_ladder
+
+
 def main(symbol, month):
     settlements = sp.get_all_settlements(symbol)
 
@@ -320,7 +348,7 @@ def main(symbol, month):
 
 
     greek = "delta"
-    theo_price = 345
+    theo_price = 330
     #coefficients = theo_greek_at_price(skewed_months, greek, price_ladder, theo_price)["coefficients"]
     theo = theo_greek_at_price(settlements, symbol, month, greek, theo_price)
     print(theo["delta"])

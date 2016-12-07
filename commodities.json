@@ -53,5 +53,20 @@
         "strike_divisor": 100,
         "has short-dated": false,
         "sig_figs": 1,
-        "exchange": "nymex"}
+        "exchange": "nymex"},
+ "SP": {"name": "S&P",
+        "futures": "SP   S&P 500 FUTURES",
+        "options": "S&P 500 OPTIONS",
+        "strike_divisor": 1,
+        "has short-dated": false,
+        "sig_figs": 0,
+        "exchange": "eonly"},
+ "10T": {"name": "10-Year T-Note",
+         "futures": "10 YEAR US TREASURY NOTE FUTURES",
+         "options": "10 YEAR US TREASURY NOTE OPTIONS",
+         "strike_divisor": 100,
+         "has short-dated": false,
+         "tick_size": 0.01,
+         "sig_figs": 2,
+         "exchange": "int"}
 }

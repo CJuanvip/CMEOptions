@@ -135,7 +135,10 @@ def ticks_to_decimal(ticks, symbol):
         except ValueError:
             cents = 0
         fraction = float(ticks.split("'")[1])
-        return cents + fraction * PRODUCT_SYMBOLS[symbol]["tick_size"]
+        fraction = fraction * PRODUCT_SYMBOLS[symbol]["tick_size"]
+        if fraction > 1:
+            fraction = fraction / 10 # a hack fix for commodities like T-Bonds where futures settle in thousands and options in hundredths
+        return cents + fraction * fraction
     else:
         return float(ticks)
 
@@ -318,7 +321,12 @@ def make_options_dict(settles, symbol, underlying, month, expiration_date, settl
                     on = False
                     continue
                 else:
-                    settle = ticks_to_decimal(theline.split()[5], symbol)
+                    settle = theline.split()[5]
+
+                    if settle == "CAB":
+                        continue
+
+                    settle = ticks_to_decimal(settle, symbol)
 
                     greeks = make_strike_dict(S=S,
                                               K=strike,

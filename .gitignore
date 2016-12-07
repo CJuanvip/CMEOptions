@@ -1,0 +1,12 @@
+*.pyc
+*.xlsx
+*.txt
+*.pdf
+*.aux
+*.gz
+*.swp
+*.log
+*~
+*.db
+*.png
+temp.*

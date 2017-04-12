@@ -331,9 +331,7 @@ def get_pain_ladder(settlements, symbol, month):
     return pain_ladder
 
 
-def main(symbol, month):
-    settlements = sp.get_all_settlements(symbol)
-
+def main(settlements, symbol, month, price_shift=0, theo_delta=40000):
     underlying_month = settlements["options"][month]["underlying"]
     # underlying_month: expiration date, underlying price, and open interest
 
@@ -348,19 +346,31 @@ def main(symbol, month):
 
 
     greek = "delta"
-    theo_price = 330
     #coefficients = theo_greek_at_price(skewed_months, greek, price_ladder, theo_price)["coefficients"]
+    theo_price = settlements["options"][month]["underlying"]["price"] + price_shift
     theo = theo_greek_at_price(settlements, symbol, month, greek, theo_price)
-    print(theo["delta"])
-    sys.exit(0)
-
+    return theo["delta"]
+    
     coefficients = theo["coefficients"]
-    theo_delta = 0
     print(theo_price_at_greek(coefficients, theo_delta))
 
 
 if __name__ == "__main__":
 
-    symbol = sys.argv[1]
-    month = sys.argv[2]
-    main(symbol, month)
+    #symbol = sys.argv[1]
+    #month = sys.argv[2]
+
+    symbol = "S"
+    months = ["JLY17"]
+
+    total_delta = 0
+    price_shift = 0
+
+    settlements = sp.get_all_settlements(symbol)
+
+    while total_delta >= -200000:
+        for month in months:
+            total_delta += main(settlements, symbol, month, price_shift=price_shift)
+        print("Price shift: {0}, Delta: {1}".format(price_shift, total_delta))    
+        price_shift -= 1
+        total_delta = 0

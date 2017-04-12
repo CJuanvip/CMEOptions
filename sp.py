@@ -5,6 +5,7 @@ import numpy
 from scipy import optimize, stats
 import sys
 import json
+import math
 
 
 PRODUCT_SYMBOLS = json.loads(open("commodities.json", "r").read())
@@ -138,9 +139,16 @@ def ticks_to_decimal(ticks, symbol):
         fraction = fraction * PRODUCT_SYMBOLS[symbol]["tick_size"]
         if fraction > 1:
             fraction = fraction / 10 # a hack fix for commodities like T-Bonds where futures settle in thousands and options in hundredths
-        return cents + fraction * fraction
+        return cents + fraction
     else:
         return float(ticks)
+
+
+def decimal_to_ticks(decimal, symbol):
+
+    fraction = decimal % 1
+    whole = math.floor(decimal)
+    return whole + ((fraction / PRODUCT_SYMBOLS[symbol]["tick_size"]) / 10)
 
 
 def make_futures_dict(settles, symbol, expiration_dict):
@@ -185,8 +193,11 @@ def make_futures_dict(settles, symbol, expiration_dict):
                 except KeyError:
                     pass
 
-            if PRODUCT_SYMBOLS[symbol]["futures"] in theline:
+            elif PRODUCT_SYMBOLS[symbol]["futures"] in theline:
                 on = True
+
+            if "TREASURY BOND" in theline:
+                print(theline)
 
     return futures_dict
 
@@ -387,7 +398,7 @@ def match_underlying(option, futures):
     if option in futures.keys():
         return futures[option]
 
-    months = ["JAN","FEB","MAR","APR","JUN","JLY","AUG","SEP","OCT","NOV","DEC"]
+    months = ["JAN","FEB","MAR","APR","MAY","JUN","JLY","AUG","SEP","OCT","NOV","DEC"]
     option_month = option[:3]
     option_year = int(option[-2:])
 
@@ -414,18 +425,30 @@ def match_underlying(option, futures):
 def get_all_settlements(symbol):
     
     settlements = get_settlements(symbol)
-
+    #print("Settlements retrieved")
     settlement_date = get_settlement_date(settlements)
+    #print("settlement date parsed")
     expiration_dict = make_expiration_dict(symbol)
+    #print("expiration dict made")
     settlements = isolate_commodity(settlements, symbol)
+    #print("{0} isolated".format(symbol))
     futures = make_futures_dict(settlements, symbol, expiration_dict)
-
+    #print("Futures parsed")
     options_months = get_options_months(settlements, symbol)
-
+    #print("options months enumerated")
     options = {}
     for month in options_months:
+        #print("parsing {0} options".format(month))
         underlying = match_underlying(month, futures)
-        expiration_date = expiration_dict[month]
+        try:
+            expiration_date = expiration_dict[month]
+        except KeyError:
+            print("\n\n{0} expiration date is missing from expiration_dates_{1}.csv".format(
+                month, PRODUCT_SYMBOLS[symbol]['exchange']))
+            print("Please add this expiration date and try again.")
+            print("\nPress Enter to end this program.")
+            input("")
+            sys.exit(1)
         options[month] = make_options_dict(settlements,
                                          symbol,
                                          underlying,
@@ -450,26 +473,29 @@ def main(symbol):
     futures = settlements["futures"]
     options = settlements["options"]
 
-    output = "strike,price,delta,vol,open interest,gamma\n"
-    for i in ["CALL", "PUT"]:
-        output += "{0},{1}\n".format(month, i)
-        strikes = []
-        for key in options[symbol][month][i].keys():
-            strikes.append(key)
+    print("NOV18 800  P Delta: {0}".format(settlements['options']['NOV18']['PUT'][800.0]['delta']))
+    print("NOV18 1100 C Delta: {0}".format(settlements['options']['NOV18']['CALL'][1100.0]['delta']))
 
-        strikes.sort()
+    #output = "strike,price,delta,vol,open interest,gamma\n"
+    #for i in ["CALL", "PUT"]:
+    #    output += "{0},{1}\n".format(month, i)
+    #    strikes = []
+    #    for key in options[symbol][month][i].keys():
+    #        strikes.append(key)
 
-        for strike in strikes:
-            output += "{0},{1},{2},{3},{4},{5}\n".format(strike,
-                                                   options[symbol][month][i][strike]["price"],
-                                                   options[symbol][month][i][strike]["volatility"],
-                                                   options[symbol][month][i][strike]["open_interest"],
-                                                   options[symbol][month][i][strike]["delta"],
-                                                   options[symbol][month][i][strike]["gamma"]
-                                                   )
-    settlement_date = settlements["settlement_date"]
-    with open("{0}_{1}_as_of_{2}_{3}.csv".format(symbol, month, settlement_date.month, settlement_date.day), "w") as file:
-            file.write(output)
+    #    strikes.sort()
+
+    #    for strike in strikes:
+    #        output += "{0},{1},{2},{3},{4},{5}\n".format(strike,
+    #                                               options[symbol][month][i][strike]["price"],
+    #                                               options[symbol][month][i][strike]["volatility"],
+    #                                               options[symbol][month][i][strike]["open_interest"],
+    #                                               options[symbol][month][i][strike]["delta"],
+    #                                               options[symbol][month][i][strike]["gamma"]
+    #                                               )
+    #settlement_date = settlements["settlement_date"]
+    #with open("{0}_{1}_as_of_{2}_{3}.csv".format(symbol, month, settlement_date.month, settlement_date.day), "w") as file:
+    #        file.write(output)
 
 
 if __name__ == '__main__':

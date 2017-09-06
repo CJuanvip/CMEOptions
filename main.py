@@ -20,8 +20,8 @@ if __name__ == '__main__':
 
     symbol = input('\nWhich commmodity would you like to analyze?  ')
 
-    try:
-    	main(symbol)
-    except KeyError:
-    	print("Invalid Product")
-    	sys.exit(1)
+#    try:
+    main(symbol)
+    #except KeyError:
+    #	print("Invalid Product")
+    #	sys.exit(1)

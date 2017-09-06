@@ -1,11 +1,12 @@
 png("{symbol}_{month}_{graph}.png")
 options(scipen=999)
+savefont <- par(family="Charter")
 {args}
 m <- matrix(c(price, calls, puts),
             nrow=3,
             byrow=TRUE)
 barplot(m[2:3,],
-        col=c("darkblue","red"),
+        col=c("#6689cc","#472311"),
         xlab="Price",
         ylab="Contracts",
         names=m[1,],
@@ -13,8 +14,8 @@ barplot(m[2:3,],
         cex.names=0.75,
         las=2,
         main="{month} {commodity} {desc}")
-legend("top",
+legend("top", 
        legend=c("ITM Calls","ITM Puts"),
        bty="n",
-       fill=c("darkblue","red"))
+       fill=c("#6689cc","#472311"))
 dev.off()

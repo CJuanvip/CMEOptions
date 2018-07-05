@@ -126,9 +126,9 @@ def tex_to_pdf(tex, settlement_date):
 	with open("{0}".format(os.path.join(script_dir, "{0}.tex".format(file_name))), "w") as f:
 		f.write(tex)
 
-	subprocess.call("latex --output-format=pdf {0}".format(os.path.join(script_dir, "{0}.tex".format(file_name))), shell=True)
-	subprocess.call("move {0}.pdf options".format(file_name), shell=True)
-	subprocess.call("del {0}.tex".format(file_name), shell=True)
+	subprocess.call("pdflatex {0}".format(os.path.join(script_dir, "{0}.tex".format(file_name))), shell=True)
+	subprocess.call("mv {0}.pdf options".format(file_name), shell=True)
+	subprocess.call("rm {0}.tex".format(file_name), shell=True)
 
 	for root, dirs, files in os.walk(script_dir):
 		for currentFile in files:

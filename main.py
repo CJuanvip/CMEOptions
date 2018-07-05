@@ -20,8 +20,6 @@ def main(args):
             print("{0}\t- {1}".format(symbol, ps[symbol]["name"]))
         symbol = input("\nWhich commodity would you like to analyze? ")
         process(symbol)
-        else:
-            pass
     else:
         for arg in args:
             try:
@@ -32,4 +30,4 @@ def main(args):
 
 if __name__ == '__main__':
 
-    main(sys.args[1:])
+    main(sys.argv[1:])

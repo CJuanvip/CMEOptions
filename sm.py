@@ -123,6 +123,10 @@ def tex_to_pdf(tex, settlement_date):
 
 	file_name = "OOI_{0}".format(settlement_date.strftime("%m_%d_%Y"))
 
+        #HACK
+        with open("filename.var") as f:
+            f.write(file_name))
+
 	with open("{0}".format(os.path.join(script_dir, "{0}.tex".format(file_name))), "w") as f:
 		f.write(tex)
 

@@ -155,10 +155,6 @@ def tex_to_pdf(tex, symbol, settlement_date):
     file_name = settlement_date.strftime("%m_%d_%Y")
     file_name += "_{0}".format(symbol)
 
-    #HACK
-    with open("filename.var", "w") as f:
-        f.write("export FILE=\"{0}.pdf\"".format(file_name))
-    
     with open("{0}".format(os.path.join(script_dir, "{0}.tex".format(file_name))),
               "w") as f:
         f.write(tex)
@@ -173,6 +169,8 @@ def tex_to_pdf(tex, symbol, settlement_date):
             exts = (".aux", ".log")
             if any(currentFile.lower().endswith(ext) for ext in exts):
                 os.remove(os.path.join(root, currentFile))
+
+    subprocess.call("echo \"{0} Options Open Interest\" | mail -s \"{0} Options\" -A {1}.pdf bthrelkeld@rcgdirect.com".format(PRODUCT_SYMBOLS[symbol]["name"], file_name))
 
 
 def main(symbol):

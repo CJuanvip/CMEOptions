@@ -446,8 +446,7 @@ def get_all_settlements(symbol):
             print("\n\n{0} expiration date is missing from expiration_dates_{1}.csv".format(
                 month, PRODUCT_SYMBOLS[symbol]['exchange']))
             print("Please add this expiration date and try again.")
-            print("\nPress Enter to end this program.")
-            input("")
+            subprocess("echo \"Expiration date for {0} is missing from expiration dates. Please update with the dates at https://www.cmegroup.com/trading/agricultural/grain-and-oilseed/soybean_product_calendar_options.html#optionProductId=321\" | mail -s \"Options Open Interest Update Needed\" chathrel@indiana.edu")
             sys.exit(1)
         options[month] = make_options_dict(settlements,
                                          symbol,

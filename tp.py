@@ -170,7 +170,7 @@ def tex_to_pdf(tex, symbol, settlement_date):
             if any(currentFile.lower().endswith(ext) for ext in exts):
                 os.remove(os.path.join(root, currentFile))
 
-    subprocess.call("echo \"{0} Options Open Interest\" | mail -s \"{0} Options\" -A ~/settlement-parser/reports/{1}.pdf bthrelkeld@rcgdirect.com".format(PRODUCT_SYMBOLS[symbol]["name"], file_name))
+    #subprocess.call("echo \"{0} Options Open Interest\" | mail -s \"{0} Options\" -A ~/settlement-parser/reports/{1}.pdf bthrelkeld@rcgdirect.com".format(PRODUCT_SYMBOLS[symbol]["name"], file_name))
     subprocess.call("echo \"{0} Options Open Interest\" | mail -s \"{0} Options\" -A ~/settlement-parser/reports/{1}.pdf chathrel@indiana.edu".format(PRODUCT_SYMBOLS[symbol]["name"], file_name))
 
 

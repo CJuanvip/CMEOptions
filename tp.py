@@ -171,7 +171,7 @@ def tex_to_pdf(tex, symbol, settlement_date):
                 os.remove(os.path.join(root, currentFile))
 
     subprocess.run("echo \"{0} Options Open Interest\" | mail -s \"{0} Options\" -A ~/settlement-parser/reports/{1}.pdf bthrelkeld@rcgdirect.com".format(PRODUCT_SYMBOLS[symbol]["name"], file_name), shell=True)
-    #subprocess.run("echo \"{0} Options Open Interest\" | mail -s \"{0} Options\" -A ~/settlement-parser/reports/{1}.pdf chathrel@indiana.edu".format(PRODUCT_SYMBOLS[symbol]["name"], file_name), shell=True)
+    subprocess.run("echo \"{0} Options Open Interest\" | mail -s \"{0} Options\" -A ~/settlement-parser/reports/{1}.pdf chathrel@indiana.edu".format(PRODUCT_SYMBOLS[symbol]["name"], file_name), shell=True)
 
 
 def main(symbol):

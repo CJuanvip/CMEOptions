@@ -1,5 +1,6 @@
 import sp
 from sp import PRODUCT_SYMBOLS
+import mail
 import wi
 import subprocess
 import sys
@@ -123,10 +124,6 @@ def tex_to_pdf(tex, settlement_date):
 
 	file_name = "OOI_{0}".format(settlement_date.strftime("%m_%d_%Y"))
 
-        #HACK
-        with open("filename.var") as f:
-            f.write(file_name))
-
 	with open("{0}".format(os.path.join(script_dir, "{0}.tex".format(file_name))), "w") as f:
 		f.write(tex)
 
@@ -139,6 +136,10 @@ def tex_to_pdf(tex, settlement_date):
 			exts = (".aux", ".log")
 			if any(currentFile.lower().endswith(ext) for ext in exts):
 				os.remove(os.path.join(root, currentFile))
+
+	body = "Options Overview"
+	attachment = "~/settlement-parser/reports/{0}.pdf".format(file_name)
+	mail.send_mail(body, body, attachment)
 
 
 def oi_tex_maker(settlements, symbols):

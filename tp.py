@@ -1,5 +1,6 @@
 from sp import PRODUCT_SYMBOLS
 import wi
+import mail
 import plotter
 import os
 import sys
@@ -170,8 +171,10 @@ def tex_to_pdf(tex, symbol, settlement_date):
             if any(currentFile.lower().endswith(ext) for ext in exts):
                 os.remove(os.path.join(root, currentFile))
 
-    subprocess.run("echo \"{0} Options Open Interest\" | mail -s \"{0} Options\" -A ~/settlement-parser/reports/{1}.pdf bthrelkeld@rcgdirect.com".format(PRODUCT_SYMBOLS[symbol]["name"], file_name), shell=True)
-    subprocess.run("echo \"{0} Options Open Interest\" | mail -s \"{0} Options\" -A ~/settlement-parser/reports/{1}.pdf chathrel@indiana.edu".format(PRODUCT_SYMBOLS[symbol]["name"], file_name), shell=True)
+    body = "{0} Options Open Interest".format(PRODUCT_SYMBOLS[symbol]["name"])
+    subject = "{0} Options".format(PRODUCT_SYMBOLS[symbol]["name"])
+    attachment = "~/settlement-parser/reports/{0}.pdf".format(file_name)
+    mail.send_mail(body, subject, attachment)
 
 
 def main(symbol):

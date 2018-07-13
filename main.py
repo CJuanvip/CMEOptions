@@ -1,32 +1,32 @@
 import sp
+import sm
 import tp
 import odb
 import sys
 
 
-def process(symbol):
-    settlements = sp.get_all_settlements(symbol)
-    print("{0} settlements gotten".format(sp.PRODUCT_SYMBOLS[symbol]["name"]))
+def process(settlements, symbol):
     options_data = tp.oi_tex_maker(settlements, symbol)
-    print("tex_made")
-    odb.add_data(symbol, settlements, options_data)
-
+    odb.add_data(symbol, settlements, options_data)        
 
 def main(args):
-        
+
     if len(args) == 0:
         ps = sp.PRODUCT_SYMBOLS
         for symbol in ps.keys():
             print("{0}\t- {1}".format(symbol, ps[symbol]["name"]))
-        symbol = input("\nWhich commodity would you like to analyze? ")
-        process(symbol)
+            symbol = input("\nWhich commodity would you like to analyze? ")
+            process(symbol)
     else:
-        for arg in args:
+        settlements = {}
+        for symbol in args:
             try:
-                process(arg)
+                settlements[symbol] = sp.get_all_settlements(symbol)
+                process(settlements[symbol], symbol)
             except KeyError:
                 print("Invalid Product")
-                
+        sm.oi_tex_maker(settlements, args)
+
 
 if __name__ == '__main__':
 

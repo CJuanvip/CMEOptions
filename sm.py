@@ -138,7 +138,7 @@ def tex_to_pdf(tex, settlement_date):
 				os.remove(os.path.join(root, currentFile))
 
 	body = "Options Overview"
-	attachment = "~/settlement-parser/reports/{0}.pdf".format(file_name)
+	attachment = "~/settlement-parser/options/{0}.pdf".format(file_name)
 	mail.send_mail(body, body, attachment)
 
 

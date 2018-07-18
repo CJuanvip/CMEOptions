@@ -305,7 +305,7 @@ def d2(v, S, K, T, r=INTEREST_RATE):
     return D2
 
 
-def make_options_dict(settles, symbol, underlying, month, expiration_date, settlement_date):
+def make_options_dict(settles, symbol, underlying, month, expiration_date, settlement_date, match="options"):
 
     file_name = os.path.join(settles["directory"], settles["file_name"])
     options_dict = {"expiration_date": expiration_date, 
@@ -359,7 +359,7 @@ def make_options_dict(settles, symbol, underlying, month, expiration_date, settl
                     options_dict[call_or_put][strike]["price"] = settle
 
 
-            if PRODUCT_SYMBOLS[symbol]["options"] in theline:
+            if PRODUCT_SYMBOLS[symbol][match] in theline:
                 try:
                     if month == theline.split()[1]:
                         call_or_put = theline.split()[-1]
@@ -370,7 +370,7 @@ def make_options_dict(settles, symbol, underlying, month, expiration_date, settl
     return options_dict
 
 
-def get_options_months(settles, symbol):
+def get_options_months(settles, symbol, sd=False):
     all_settles = os.path.join(settles["directory"], settles["file_name"])
 
     options_months = []
@@ -382,11 +382,15 @@ def get_options_months(settles, symbol):
                 break
 
             month = None
-            if PRODUCT_SYMBOLS[symbol]["options"] in theline:
-                if not PRODUCT_SYMBOLS[symbol]["has short-dated"]:
+            if sd:
+                if PRODUCT_SYMBOLS[symbol]["short-dated"] in theline:
                     month = theline.split()[1]
-                elif not PRODUCT_SYMBOLS[symbol]["short-dated"] in theline:
-                    month = theline.split()[1]
+            else:
+                if PRODUCT_SYMBOLS[symbol]["options"] in theline:
+                    if not PRODUCT_SYMBOLS[symbol]["has short-dated"]:
+                        month = theline.split()[1]
+                    elif not PRODUCT_SYMBOLS[symbol]["short-dated"] in theline:
+                        month = theline.split()[1]
 
             if month and not month in options_months:
                 options_months.append(month)
@@ -462,8 +466,40 @@ def get_all_settlements(symbol):
 
     for key in empty_keys:
         options.pop(key, None)
+        
+    short_dated = {}
+    if PRODUCT_SYMBOLS[symbol]['has short-dated']:
+        sd_months = get_options_months(settlements, symbol, True)
+        for month in sd_months:
+            print(month)
+        for month in sd_months:
+            option_year = int(month[-2:])
+            underlying = futures["{0}{1}".format(PRODUCT_SYMBOLS[symbol]['short-dated month'], option_year)]
+            try:
+                expiration_date = expiration_dict[month]
+            except KeyError:
+                print("\n\n{0} expiration date is missing from expiration_dates_{1}.csv".format(
+                    month, PRODUCT_SYMBOLS[symbol]['exchange']))
+                print("Please add this expiration date and try again.")
+                subprocess.run("echo \"Expiration date for {0} is missing from expiration dates. Please update with the dates at https://www.cmegroup.com/trading/agricultural/grain-and-oilseed/soybean_product_calendar_options.html#optionProductId=321\" | mail -s \"Options Open Interest Update Needed\" chathrel@indiana.edu", shell=True)
+                sys.exit(1)
 
-    return {"futures": futures, "options": options, "settlement_date": settlement_date}
+            short_dated[month] = make_options_dict(settlements,
+                                                   symbol,
+                                                   underlying,
+                                                   month,
+                                                   expiration_date,
+                                                   settlement_date,
+                                                   "short-dated")
+    empty_keys = []
+    for key in short_dated.keys():
+        if short_dated[key] == {"PUT": {}, "CALL": {}}:
+            empty_keys.append(key)
+
+    for key in empty_keys:
+        short_dated.pop(key, None)
+
+    return {"futures": futures, "options": options, "short-dated": short_dated, "settlement_date": settlement_date}
 
 
 def main(symbol):

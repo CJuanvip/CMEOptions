@@ -20,11 +20,17 @@ MONTH_LETTERS = {'JAN': 'F',
                  'DEC': 'Z'}
 
 
-def get_tex_template(settlement_date, commodity, months, graphics):
-    with open("template.tex", "r") as f:
-        template = f.read()
+def get_tex_template(settlement_date, commodity, months, sd, graphics):
 
-    return template.format(date=settlement_date, commodity=commodity, months=months, graphics=graphics)
+    template = ""
+    if sd == "":
+        with open("template.tex", "r") as f:
+            template = f.read()
+        return template.format(date=settlement_date, commodity=commodity, months=months, graphics=graphics)
+    else:
+        with open("short_dated_template.tex", "r") as f:
+            template = f.read()
+        return template.format(date=settlement_date, commodity=commodity, months=months, sd=sd, graphics=graphics)
 
 
 def sort_months(options):
@@ -116,6 +122,13 @@ def oi_tex_maker(settlements, symbol, oi=True, graphics=True):
         
     options = settlements["options"]
     months = sort_months(options)
+    
+    short_dated = settlements["short-dated"]
+    has_short_dated = True
+    if short_dated == {}:
+        has_short_dated = False
+    short_dated_months = sort_months(short_dated)
+    
     commodity = PRODUCT_SYMBOLS[symbol]["name"]
     settlement_date = settlements["settlement_date"]
     date_text = settlement_date.strftime("%B %d, %Y")
@@ -126,11 +139,20 @@ def oi_tex_maker(settlements, symbol, oi=True, graphics=True):
         for month in months:
             month_line = oi_month_line(symbol, month, options[month])
             months_tex += month_line["tex_string"]
-
             month_data[month_line["data"]["month"]] = month_line["data"]
 
         months_tex += "\\hline\n"
 
+    sd_tex = ""
+    sd_data = {}
+    if has_short_dated:
+        for month in short_dated:
+            month_line = oi_month_line(symbol, month, short_dated[month])
+            sd_tex += month_line["tex_string"]
+            sd_data[month_line["data"]["month"]] = month_line["data"]
+
+        sd_tex += "\\hline\n"
+            
     graphics_tex = ""
     if graphics:
         for month in big_months(options):
@@ -138,8 +160,8 @@ def oi_tex_maker(settlements, symbol, oi=True, graphics=True):
             for img in imgs:
                 graphics_tex += "\n\\newpage\n\\includegraphics"
                 graphics_tex += "{{{0}}}".format(img[:-4]) # Removes the file extension
-                
-    tex = get_tex_template(date_text, commodity, months_tex, graphics_tex)
+
+    tex = get_tex_template(date_text, commodity, months_tex, sd_tex, graphics_tex)
         
     tex_to_pdf(tex, symbol, settlement_date)
 

@@ -13,28 +13,31 @@
 \date{{For Market Date: {date} }}
 \maketitle
 \begin{{table}}[h!]
+  \caption*{{{commodity} Options}}
   \centering
-  \begin{{tabular}}{{| r | r | r | r | r | r | r |}}
+  \begin{{tabular}}{{| r | r | r | r | r | r | r | r | r |}}
     \hline
-    Contract & Delta Equivalent & Change & Avg Call & Avg Put & Avg Option & Und. Price \\
+    Contract & Num Calls & Num Puts & Call Delta & Put Delta & Avg Call & Avg Put & Avg Option & Open Futures \\
     \hline
-    & & & & & & \\
+    & & & & & & & & \\
     \hline
         {months}
     \hline
   \end{{tabular}}
 \end{{table}}
 \begin{{table}}[h!]
+  \caption*{{{commodity} Options}}
   \centering
-  \begin{{tabular}}{{| r | r | r | r | r | r | r |}}
+  \begin{{tabular}}{{| r | r | r | r | r | r | r | r | r |}}
     \hline
-    Contract & Delta Equivalent & Change & Avg Call & Avg Put & Avg Option & Und. Price \\
+    Contract & Num Calls & Num Puts & Call Delta & Put Delta & Avg Call & Avg Put & Avg Option & Open Futures \\
     \hline
-    & & & & & & \\
+    & & & & & & & & \\
     \hline
         {sd}
     \hline
   \end{{tabular}}
-  \caption*{{These tables show \newline 1) the futures equivalent open interest in the options on a delta weighted basis. \newline 2) the simple average open interest for calls, puts, and combined positions.}}
+  \caption*{{These tables show \newline 1) the number of open options contracts in the market. \newline 2) the futures equivalent open interest in options on a delta weighted basis. \newline 3) the simple average open interest for calls, puts, and combined positions.}}
 \end{{table}}
+     {graphics}
 \end{{document}}

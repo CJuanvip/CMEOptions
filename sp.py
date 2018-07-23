@@ -471,8 +471,6 @@ def get_all_settlements(symbol):
     if PRODUCT_SYMBOLS[symbol]['has short-dated']:
         sd_months = get_options_months(settlements, symbol, True)
         for month in sd_months:
-            print(month)
-        for month in sd_months:
             option_year = int(month[-2:])
             underlying = futures["{0}{1}".format(PRODUCT_SYMBOLS[symbol]['short-dated month'], option_year)]
             try:

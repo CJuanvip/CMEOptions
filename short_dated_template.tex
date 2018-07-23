@@ -1,0 +1,28 @@
+%report.text - the python output for tex rendering.
+\documentclass{{article}}
+\usepackage{{times}}
+\usepackage[margin=1cm]{{geometry}}
+\usepackage{{array}}
+\usepackage{{caption}}
+\usepackage{{graphicx}}
+\renewcommand*\rmdefault{{Charter}}
+\graphicspath{{ {{img/}} }}
+\begin{{document}}
+\title{{Options Open Interest}}
+\author{{The Lasalle Group}}
+\date{{For Market Date: {date} }}
+\maketitle
+\begin{{table}}[h!]
+  \centering
+  \begin{{tabular}}{{| r | r | r | r | r | r | r |}}
+    \hline
+    Contract & Delta Equivalent & Change & Avg Call & Avg Put & Avg Option & Und. Price \\
+    \hline
+    & & & & & & \\
+    \hline
+        {options}
+    \hline
+  \end{{tabular}}
+  \caption*{{This table shows \newline 1) the futures equivalent open interest in the options on a delta weighted basis. \newline 2) the simple average open interest for calls, puts, and combined positions.}}
+\end{{table}}
+\end{{document}}

@@ -20,11 +20,8 @@ def main(args):
     else:
         settlements = {}
         for symbol in args:
-            try:
-                settlements[symbol] = sp.get_all_settlements(symbol)
-                process(settlements[symbol], symbol)
-            except KeyError:
-                print("Invalid Product")
+            settlements[symbol] = sp.get_all_settlements(symbol)
+            process(settlements[symbol], symbol)
         sm.oi_tex_maker(settlements, args)
 
 

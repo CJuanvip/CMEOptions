@@ -2,8 +2,8 @@ import subprocess
 
 
 def get_addressees():
-#    return ["bthrelkeld@rcgdirect.com"]
-    return ["chathrel@indiana.edu"]
+    return ["bthrelkeld@rcgdirect.com"]
+#    return ["chathrel@indiana.edu"]
 
 
 def send_mail(text, subject, attachment):

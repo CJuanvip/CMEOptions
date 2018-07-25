@@ -50,8 +50,13 @@ def get_settlement_date(settlements):
     with open(all_settles, "r") as settles:
 
         theline = settles.readline().split('/')
-        month = theline[0][-2:]
-        month = int(month.strip())
+        try:
+            month = theline[0][-2:]
+            month = int(month.strip())
+        except ValueError:
+            print(theline)
+            exit(1)
+            
         day = int(theline[1])
         year = theline[2][:2]
         year = int(year.strip()) + 2000

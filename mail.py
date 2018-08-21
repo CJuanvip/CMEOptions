@@ -13,4 +13,4 @@ def send_mail(text, subject, attachment):
         try:
             subprocess.run("echo \"{0}\" | mail -s \"{1}\" -A {2} {3}".format(text, subject, attachment, addressee), shell=True)
         except:
-            pass
+            subprocess.run("echo \"{0}\" | mail -s \"Error sending email to {1}\" {2}".format("Could not send {0} to {1}".format(attachment, addressee), addressee, "chathrel@indiana.edu"))

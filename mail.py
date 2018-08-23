@@ -10,7 +10,7 @@ def get_addressees():
 def send_mail(text, subject, attachment):
     addressees = get_addressees()
     for addressee in addressees:
-        print("Emailing {0} to {1}".format(attachment, addressee)
+        print("Emailing {0} to {1}".format(attachment, addressee))
         try:
             subprocess.run("echo \"{0}\" | mail -s \"{1}\" -A {2} {3}".format(text, subject, attachment, addressee), shell=True)
         except:

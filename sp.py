@@ -1,5 +1,6 @@
 import datetime
 import os
+import subprocess
 import urllib.request
 import numpy
 from scipy import optimize, stats
